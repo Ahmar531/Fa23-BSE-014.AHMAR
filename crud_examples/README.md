@@ -1,6 +1,59 @@
 # CRUD Operations - Three Database Examples
+# CRUD Applications using MongoDB, SQLite, and MySQL
 
-This workspace contains three complete CRUD (Create, Read, Update, Delete) applications using different databases.
+This workspace contains three complete CRUD (Create, Read, Update, Delete) applications using different databases:
+
+- MongoDB
+- SQLite
+- MySQL
+
+---
+
+## 📸 Project Outputs
+
+### 🟢 MongoDB Output
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/499d147d-6c4b-46c2-829f-8c561f01c38f" width="800"/>
+</p>
+
+---
+
+### 🔵 SQLite Output
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/efb123f6-f1b6-4299-9201-810150da75dc" width="900"/>
+</p>
+
+---
+
+### 🟠 MySQL Output
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/628d0d8c-ef19-46d6-a756-65d808ac64eb" width="800"/>
+</p>
+
+---
+
+## 📌 Description
+
+This workspace demonstrates CRUD operations using three different database systems:
+
+- MongoDB (NoSQL Database)
+- SQLite (Lightweight SQL Database)
+- MySQL (Relational Database)
+
+Each application includes:
+- Create Operation
+- Read Operation
+- Update Operation
+- Delete Operation
+
+---
+
+## 🎯 Purpose
+
+The purpose of this project is to compare SQL and NoSQL databases and understand how CRUD operations are implemented in different database systems.
 
 ## Projects
 
