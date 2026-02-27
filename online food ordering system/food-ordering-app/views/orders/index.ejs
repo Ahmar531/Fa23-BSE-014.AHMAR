@@ -1,0 +1,94 @@
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Order Management</h1>
+            <p class="text-muted">View and manage all orders</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/orders/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Order
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <% if (orders.length === 0) { %>
+            <div class="alert alert-info">
+                No orders yet. <a href="/orders/create">Create your first order</a>
+            </div>
+            <% } else { %>
+                <% orders.forEach(order => { %>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><strong>Order #<%= order.id %></strong></span>
+                        <% 
+                        let badgeClass = 'bg-warning';
+                        if (order.status === 'delivered') badgeClass = 'bg-success';
+                        if (order.status === 'cancelled') badgeClass = 'bg-danger';
+                        if (order.status === 'confirmed') badgeClass = 'bg-info';
+                        if (order.status === 'preparing') badgeClass = 'bg-primary';
+                        %>
+                        <span class="badge <%= badgeClass %>"><%= order.status.toUpperCase() %></span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Customer:</strong> <%= order.customer_name %></p>
+                                <p class="mb-1"><strong>Phone:</strong> <%= order.customer_phone %></p>
+                                <p class="mb-1"><strong>Email:</strong> <%= order.customer_email %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Order Date:</strong> <%= new Date(order.created_at).toLocaleDateString() %></p>
+                                <p class="mb-1"><strong>Total:</strong> <span class="text-primary fw-bold">$<%= order.total_amount.toFixed(2) %></span></p>
+                            </div>
+                        </div>
+                        <hr>
+                        <p class="mb-2"><strong>Delivery Address:</strong></p>
+                        <p class="text-muted"><%= order.delivery_address %></p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-success">Confirm</button>
+                            <button class="btn btn-sm btn-primary">Preparing</button>
+                            <button class="btn btn-sm btn-info">Delivered</button>
+                            <button class="btn btn-sm btn-danger">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <% }); %>
+            <% } %>
+        </div>
+
+        <!-- Order Statistics Sidebar -->
+        <div class="col-lg-4">
+            <div class="card bg-light shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Order Statistics</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <span>Pending</span>
+                            <span class="badge bg-warning"><%= orders.filter(o => o.status === 'pending').length %></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <span>Confirmed</span>
+                            <span class="badge bg-info"><%= orders.filter(o => o.status === 'confirmed').length %></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <span>Preparing</span>
+                            <span class="badge bg-primary"><%= orders.filter(o => o.status === 'preparing').length %></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <span>Delivered</span>
+                            <span class="badge bg-success"><%= orders.filter(o => o.status === 'delivered').length %></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                            <span>Total Orders</span>
+                            <span class="badge bg-dark"><%= orders.length %></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

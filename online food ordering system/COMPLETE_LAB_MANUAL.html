@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Manual - Online Food Ordering System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Cover Page */
+        .cover-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 50px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .cover-page h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .cover-page h2 {
+            font-size: 2em;
+            margin: 20px 0;
+            font-weight: 300;
+        }
+        
+        .cover-page .course-info {
+            margin: 40px 0;
+            font-size: 1.2em;
+        }
+        
+        .cover-page .academic-year {
+            margin-top: 50px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        /* Header */
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px 50px;
+            border-bottom: 5px solid #3498db;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #34495e;
+            padding: 15px 50px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 25px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav a:hover {
+            color: #3498db;
+        }
+        
+        /* Content */
+        .content {
+            padding: 50px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        h3 {
+            color: #34495e;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+        
+        h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+        
+        p {
+            margin: 15px 0;
+            text-align: justify;
+        }
+        
+        /* Info Boxes */
+        .info-box {
+            background: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .danger-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        table thead {
+            background: #34495e;
+            color: white;
+        }
+        
+        table th, table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Code Blocks */
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        code {
+            background: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        
+        pre code {
+            background: transparent;
+            color: #ecf0f1;
+            padding: 0;
+        }
+        
+        /* Lists */
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin: 10px 0;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        /* Checkboxes */
+        .checkbox-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .checkbox-list li:before {
+            content: "☐ ";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .nav {
+                display: none;
+            }
+            
+            .cover-page {
+                page-break-after: always;
+            }
+            
+            h2 {
+                page-break-before: always;
+            }
+            
+            pre, table {
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                box-shadow: none;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .cover-page {
+                padding: 50px 20px;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            table th, table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <div style="border: 3px solid white; padding: 50px; border-radius: 10px;">
+                <h1>UNIVERSITY LAB MANUAL</h1>
+                <div style="height: 2px; background: white; margin: 30px auto; width: 200px;"></div>
+                <h2>DEPARTMENT OF COMPUTER SCIENCE</h2>
+                <div class="course-info">
+                    <p><strong>Course:</strong> CS-301 Web Development</p>
+                    <p><strong>Lab Title:</strong> Advanced Web Application Development</p>
+                </div>
+                <h2 style="margin-top: 50px;">PROJECT TITLE:</h2>
+                <h1 style="font-size: 3.5em; margin: 20px 0;">Online Food Ordering System</h1>
+                <div class="academic-year">
+                    <p>Academic Year: 2024-2025</p>
+                    <p>Semester: Spring</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <h1>Lab Manual: Online Food Ordering System</h1>
+            <p>CS-301 Web Development | Credit Hours: 3(2+1)</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <a href="#intro">Introduction</a>
+            <a href="#phase1">Phase 1</a>
+            <a href="#phase2">Phase 2</a>
+            <a href="#phase3">Phase 3</a>
+            <a href="#phase4">Phase 4</a>
+            <a href="#grading">Grading</a>
+            <a href="#viva">Viva</a>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            
+            <!-- Learning Outcomes -->
+            <section id="outcomes">
+                <h2>Learning Outcomes</h2>
+                <p>Upon successful completion of this lab project, students will be able to:</p>
+                <ol>
+                    <li><strong>LO1:</strong> Understand and implement Model-View-Controller (MVC) architectural pattern</li>
+                    <li><strong>LO2:</strong> Utilize framework scaffolding tools for rapid application development</li>
+                    <li><strong>LO3:</strong> Design and implement responsive user interfaces using Bootstrap framework</li>
+                    <li><strong>LO4:</strong> Apply RESTful architectural principles including statelessness and idempotency</li>
+                    <li><strong>LO5:</strong> Design proper resource-based URIs following REST conventions</li>
+                    <li><strong>LO6:</strong> Map HTTP methods correctly to CRUD operations</li>
+                    <li><strong>LO7:</strong> Implement hierarchical API endpoint structures</li>
+                    <li><strong>LO8:</strong> Document API design decisions with technical justification</li>
+                </ol>
+            </section>
+
+            <!-- Submission Instructions -->
+            <section id="submission">
+                <h2>Submission Instructions</h2>
+                
+                <h3>Submission Deadlines</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Deadline</th>
+                            <th>Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Phase 1: Models & Scaffolding</td>
+                            <td>End of Week 2 (Friday, 11:59 PM)</td>
+                            <td>25%</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 2: Bootstrap Integration</td>
+                            <td>End of Week 4 (Friday, 11:59 PM)</td>
+                            <td>25%</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 3: REST Principles</td>
+                            <td>End of Week 6 (Friday, 11:59 PM)</td>
+                            <td>25%</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 4: URI Design</td>
+                            <td>End of Week 8 (Friday, 11:59 PM)</td>
+                            <td>25%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Final Submission</strong></td>
+                            <td><strong>Week 9 (Complete Package)</strong></td>
+                            <td><strong>100%</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Submission Format</h3>
+                <ul>
+                    <li><strong>GitHub Repository</strong> (Public or Private with instructor access)</li>
+                    <li><strong>Documentation</strong> (PDF format, professionally formatted)</li>
+                    <li><strong>Video Demonstration</strong> (5-7 minutes, uploaded to YouTube/Drive)</li>
+                    <li><strong>Postman Collection</strong> (JSON export)</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Naming Convention:</strong><br>
+                    <code>StudentID_Name_Phase#_FoodOrderingSystem</code><br>
+                    Example: <code>2024CS001_JohnDoe_Phase1_FoodOrderingSystem.pdf</code>
+                </div>
+            </section>
+
+
+            <!-- Introduction -->
+            <section id="intro">
+                <h2>Introduction</h2>
+                
+                <h3>Overview of MVC Architecture</h3>
+                <p>The Model-View-Controller (MVC) is a software architectural pattern that separates an application into three interconnected components:</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Responsibility</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Model (M)</strong></td>
+                            <td>Data and business logic, database interactions, validation</td>
+                            <td>MenuItem model handles menu item data</td>
+                        </tr>
+                        <tr>
+                            <td><strong>View (V)</strong></td>
+                            <td>User interface presentation, display data, collect input</td>
+                            <td>HTML templates showing menu items</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Controller (C)</strong></td>
+                            <td>Request handling, coordinate Model and View</td>
+                            <td>MenuItemController handles CRUD</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="success-box">
+                    <strong>Benefits of MVC:</strong>
+                    <ul>
+                        <li>✓ Separation of Concerns - Each component has distinct responsibility</li>
+                        <li>✓ Maintainability - Changes in one layer don't affect others</li>
+                        <li>✓ Testability - Components can be tested independently</li>
+                        <li>✓ Reusability - Models can be reused across different views</li>
+                        <li>✓ Parallel Development - Teams can work on different layers</li>
+                    </ul>
+                </div>
+
+                <h3>Importance of RESTful Design</h3>
+                <p>REST (Representational State Transfer) is an architectural style for designing networked applications.</p>
+                
+                <h4>Core REST Principles:</h4>
+                <ol>
+                    <li><strong>Client-Server Architecture</strong> - Clear separation between client and server</li>
+                    <li><strong>Statelessness</strong> <span class="badge badge-danger">CRITICAL</span> - Server does not store client context</li>
+                    <li><strong>Uniform Interface</strong> - Consistent API design with standard HTTP methods</li>
+                    <li><strong>Resource-Based</strong> - Everything is a resource (menu items, orders)</li>
+                    <li><strong>Idempotency</strong> <span class="badge badge-danger">CRITICAL</span> - Multiple identical requests have same effect</li>
+                </ol>
+
+                <div class="info-box">
+                    <strong>Why REST Matters:</strong>
+                    <ul>
+                        <li>✓ Scalability - Stateless design enables horizontal scaling</li>
+                        <li>✓ Simplicity - Standard HTTP methods are well-understood</li>
+                        <li>✓ Flexibility - Multiple client types (web, mobile, IoT)</li>
+                        <li>✓ Visibility - HTTP methods clearly indicate operation intent</li>
+                    </ul>
+                </div>
+
+                <h3>Role of Frontend Frameworks (Bootstrap)</h3>
+                <p>Bootstrap is the world's most popular front-end framework for building responsive, mobile-first websites.</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Description</th>
+                            <th>Benefit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Grid System</td>
+                            <td>12-column responsive layout</td>
+                            <td>Automatic adaptation to screen size</td>
+                        </tr>
+                        <tr>
+                            <td>Components</td>
+                            <td>Pre-built UI elements</td>
+                            <td>Rapid development</td>
+                        </tr>
+                        <tr>
+                            <td>Responsive</td>
+                            <td>Mobile-first approach</td>
+                            <td>Works on all devices</td>
+                        </tr>
+                        <tr>
+                            <td>Customizable</td>
+                            <td>Can be themed</td>
+                            <td>Brand consistency</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Phase 1 -->
+            <section id="phase1">
+                <h2>PHASE 1: Models & View Generators (Scaffolding)</h2>
+                <p><strong>Duration:</strong> Week 1-2 | <strong>Weight:</strong> 25% | <strong>Learning Outcome:</strong> LO1, LO2</p>
+                
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Set up an MVC framework environment</li>
+                    <li>Create database models with proper relationships</li>
+                    <li>Use scaffolding tools to generate CRUD operations</li>
+                    <li>Generate plain HTML views automatically</li>
+                    <li>Understand the productivity benefits of code generation</li>
+                </ul>
+
+                <h3>Framework Selection</h3>
+                <div class="warning-box">
+                    <strong>IMPORTANT:</strong> Students MUST choose ONE of the following MVC frameworks and use it throughout all phases.
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Framework</th>
+                            <th>Language</th>
+                            <th>Difficulty</th>
+                            <th>Recommended For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Laravel</strong></td>
+                            <td>PHP</td>
+                            <td>Beginner</td>
+                            <td>Students familiar with PHP</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Django</strong></td>
+                            <td>Python</td>
+                            <td>Intermediate</td>
+                            <td>Students familiar with Python</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ASP.NET Core</strong></td>
+                            <td>C#</td>
+                            <td>Advanced</td>
+                            <td>Students familiar with C#</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Required Models</h3>
+                <h4>Model 1: MenuItem</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Constraints</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>id</td>
+                            <td>Integer</td>
+                            <td>Primary Key, Auto-increment</td>
+                            <td>Unique identifier</td>
+                        </tr>
+                        <tr>
+                            <td>name</td>
+                            <td>String(200)</td>
+                            <td>Required, Not Null</td>
+                            <td>Item name</td>
+                        </tr>
+                        <tr>
+                            <td>description</td>
+                            <td>Text</td>
+                            <td>Required</td>
+                            <td>Item description</td>
+                        </tr>
+                        <tr>
+                            <td>category</td>
+                            <td>Enum/String</td>
+                            <td>Required</td>
+                            <td>appetizer, main, dessert, beverage</td>
+                        </tr>
+                        <tr>
+                            <td>price</td>
+                            <td>Decimal(8,2)</td>
+                            <td>Required, Min: 0.01</td>
+                            <td>Item price</td>
+                        </tr>
+                        <tr>
+                            <td>image_url</td>
+                            <td>String(500)</td>
+                            <td>Optional</td>
+                            <td>Image URL</td>
+                        </tr>
+                        <tr>
+                            <td>is_available</td>
+                            <td>Boolean</td>
+                            <td>Default: true</td>
+                            <td>Availability status</td>
+                        </tr>
+                        <tr>
+                            <td>created_at</td>
+                            <td>Timestamp</td>
+                            <td>Auto</td>
+                            <td>Creation timestamp</td>
+                        </tr>
+                        <tr>
+                            <td>updated_at</td>
+                            <td>Timestamp</td>
+                            <td>Auto</td>
+                            <td>Last update timestamp</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 1 Deliverables</h3>
+                <ul class="checkbox-list">
+                    <li>Source Code (GitHub repository link)</li>
+                    <li>Database Schema Document (PDF with ER diagram)</li>
+                    <li>Screenshots (PDF - all CRUD operations)</li>
+                    <li>Scaffolding Explanation (PDF, 1-2 pages)</li>
+                    <li>MVC Separation Document (PDF, 1 page)</li>
+                </ul>
+
+                <h3>Phase 1 Grading Rubric (25 Points)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Criteria</th>
+                            <th>Points</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Models</td>
+                            <td>8</td>
+                            <td>Correct fields, data types, relationships, validations</td>
+                        </tr>
+                        <tr>
+                            <td>Controllers</td>
+                            <td>7</td>
+                            <td>All CRUD operations working, proper validation</td>
+                        </tr>
+                        <tr>
+                            <td>Views</td>
+                            <td>5</td>
+                            <td>All required views created, functional forms</td>
+                        </tr>
+                        <tr>
+                            <td>Database</td>
+                            <td>3</td>
+                            <td>Proper migrations, schema design, sample data</td>
+                        </tr>
+                        <tr>
+                            <td>Documentation</td>
+                            <td>2</td>
+                            <td>Clear explanations, complete screenshots</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+
+            <!-- Phase 2 -->
+            <section id="phase2">
+                <h2>PHASE 2: Bootstrap Integration</h2>
+                <p><strong>Duration:</strong> Week 3-4 | <strong>Weight:</strong> 25% | <strong>Learning Outcome:</strong> LO3</p>
+                
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Integrate Bootstrap framework into existing application</li>
+                    <li>Implement responsive 12-column grid system</li>
+                    <li>Use Bootstrap components (Navbar, Cards, Forms, Buttons)</li>
+                    <li>Create mobile-responsive layouts</li>
+                    <li>Understand responsive design principles</li>
+                </ul>
+
+                <h3>Bootstrap Grid Breakpoints</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Breakpoint</th>
+                            <th>Class Prefix</th>
+                            <th>Screen Width</th>
+                            <th>Device</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Extra Small</td>
+                            <td><code>col-</code></td>
+                            <td>&lt;576px</td>
+                            <td>Mobile portrait</td>
+                        </tr>
+                        <tr>
+                            <td>Small</td>
+                            <td><code>col-sm-</code></td>
+                            <td>≥576px</td>
+                            <td>Mobile landscape</td>
+                        </tr>
+                        <tr>
+                            <td>Medium</td>
+                            <td><code>col-md-</code></td>
+                            <td>≥768px</td>
+                            <td>Tablet</td>
+                        </tr>
+                        <tr>
+                            <td>Large</td>
+                            <td><code>col-lg-</code></td>
+                            <td>≥992px</td>
+                            <td>Desktop</td>
+                        </tr>
+                        <tr>
+                            <td>Extra Large</td>
+                            <td><code>col-xl-</code></td>
+                            <td>≥1200px</td>
+                            <td>Large desktop</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Required Bootstrap Components</h3>
+                <ul>
+                    <li><span class="badge badge-success">✓</span> Navbar - Responsive navigation bar</li>
+                    <li><span class="badge badge-success">✓</span> Cards - Display menu items</li>
+                    <li><span class="badge badge-success">✓</span> Forms - Styled input forms</li>
+                    <li><span class="badge badge-success">✓</span> Buttons - Action buttons</li>
+                    <li><span class="badge badge-success">✓</span> Grid - 12-column layout</li>
+                    <li><span class="badge badge-success">✓</span> Badges - Status indicators</li>
+                    <li><span class="badge badge-success">✓</span> Modals - Delete confirmation</li>
+                </ul>
+
+                <h3>Phase 2 Grading Rubric (25 Points)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Criteria</th>
+                            <th>Points</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Grid System</td>
+                            <td>6</td>
+                            <td>Proper 12-column grid, responsive breakpoints</td>
+                        </tr>
+                        <tr>
+                            <td>Cards</td>
+                            <td>5</td>
+                            <td>Menu items in cards, proper styling</td>
+                        </tr>
+                        <tr>
+                            <td>Navbar</td>
+                            <td>4</td>
+                            <td>Responsive navbar, mobile menu works</td>
+                        </tr>
+                        <tr>
+                            <td>Forms</td>
+                            <td>5</td>
+                            <td>All forms styled, proper Bootstrap classes</td>
+                        </tr>
+                        <tr>
+                            <td>Responsiveness</td>
+                            <td>3</td>
+                            <td>Works on mobile, tablet, desktop</td>
+                        </tr>
+                        <tr>
+                            <td>Documentation</td>
+                            <td>2</td>
+                            <td>Clear screenshots, explanations</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Phase 3 -->
+            <section id="phase3">
+                <h2>PHASE 3: REST Principles & HTTP Method Mapping</h2>
+                <p><strong>Duration:</strong> Week 5-6 | <strong>Weight:</strong> 25% | <strong>Learning Outcome:</strong> LO4, LO6</p>
+                
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Understand REST architectural principles</li>
+                    <li>Implement proper HTTP methods for CRUD operations</li>
+                    <li>Apply statelessness principle with token-based authentication</li>
+                    <li>Identify and implement idempotent operations</li>
+                    <li>Document API design decisions with technical justification</li>
+                </ul>
+
+                <h3>Statelessness Principle</h3>
+                <div class="danger-box">
+                    <strong>CRITICAL REQUIREMENT:</strong> The server does NOT store any client context between requests. Each request must contain ALL information needed to process it.
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Approach</th>
+                            <th>Stateful (❌ WRONG)</th>
+                            <th>Stateless (✅ CORRECT)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Authentication</td>
+                            <td>Server-side sessions</td>
+                            <td>Token in Authorization header</td>
+                        </tr>
+                        <tr>
+                            <td>User Context</td>
+                            <td>Stored in session</td>
+                            <td>Extracted from token</td>
+                        </tr>
+                        <tr>
+                            <td>Scalability</td>
+                            <td>Limited (session affinity)</td>
+                            <td>Unlimited (any server)</td>
+                        </tr>
+                        <tr>
+                            <td>Load Balancing</td>
+                            <td>Sticky sessions required</td>
+                            <td>Any server can handle request</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Idempotency Analysis</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>HTTP Method</th>
+                            <th>Idempotent?</th>
+                            <th>Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GET</strong></td>
+                            <td><span class="badge badge-success">✅ YES</span></td>
+                            <td>Reading data doesn't change state. Multiple calls return same data.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POST</strong></td>
+                            <td><span class="badge badge-danger">❌ NO</span></td>
+                            <td>Creates new resource each time. Multiple calls create multiple resources.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PUT</strong></td>
+                            <td><span class="badge badge-success">✅ YES</span></td>
+                            <td>Replaces resource. Multiple calls with same data produce same final state.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DELETE</strong></td>
+                            <td><span class="badge badge-success">✅ YES</span></td>
+                            <td>First call deletes. Subsequent calls find nothing. Same final state.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PATCH</strong></td>
+                            <td><span class="badge badge-warning">⚠️ DEPENDS</span></td>
+                            <td>Depends on implementation. May or may not be idempotent.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>HTTP Status Codes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>When to Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>200</td>
+                            <td>OK</td>
+                            <td>Successful GET, PUT, DELETE</td>
+                        </tr>
+                        <tr>
+                            <td>201</td>
+                            <td>Created</td>
+                            <td>Successful POST (resource created)</td>
+                        </tr>
+                        <tr>
+                            <td>400</td>
+                            <td>Bad Request</td>
+                            <td>Invalid input, validation failed</td>
+                        </tr>
+                        <tr>
+                            <td>401</td>
+                            <td>Unauthorized</td>
+                            <td>Missing or invalid authentication</td>
+                        </tr>
+                        <tr>
+                            <td>404</td>
+                            <td>Not Found</td>
+                            <td>Resource doesn't exist</td>
+                        </tr>
+                        <tr>
+                            <td>500</td>
+                            <td>Internal Server Error</td>
+                            <td>Unexpected server error</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 3 Grading Rubric (25 Points)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Criteria</th>
+                            <th>Points</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HTTP Methods</td>
+                            <td>6</td>
+                            <td>Correct use of GET, POST, PUT, DELETE</td>
+                        </tr>
+                        <tr>
+                            <td>Statelessness</td>
+                            <td>6</td>
+                            <td>Token-based auth, no session dependency</td>
+                        </tr>
+                        <tr>
+                            <td>Idempotency</td>
+                            <td>5</td>
+                            <td>Correct identification and implementation</td>
+                        </tr>
+                        <tr>
+                            <td>Status Codes</td>
+                            <td>3</td>
+                            <td>Appropriate codes for different scenarios</td>
+                        </tr>
+                        <tr>
+                            <td>Documentation</td>
+                            <td>5</td>
+                            <td>Clear explanations with examples</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+
+            <!-- Phase 4 -->
+            <section id="phase4">
+                <h2>PHASE 4: Resource & URI Design</h2>
+                <p><strong>Duration:</strong> Week 7-8 | <strong>Weight:</strong> 25% | <strong>Learning Outcome:</strong> LO5, LO7</p>
+                
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Design proper RESTful URIs following industry standards</li>
+                    <li>Use plural nouns for resource names</li>
+                    <li>Implement hierarchical URI structures</li>
+                    <li>Avoid verbs in URIs</li>
+                    <li>Create comprehensive API documentation</li>
+                </ul>
+
+                <h3>URI Design Rules (STRICT ENFORCEMENT)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rule</th>
+                            <th>✅ CORRECT</th>
+                            <th>❌ WRONG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Use Plural Nouns</strong></td>
+                            <td><code>/api/menu-items</code></td>
+                            <td><code>/api/menu-item</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. NO Verbs</strong></td>
+                            <td><code>GET /api/menu-items</code></td>
+                            <td><code>/api/getMenuItems</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Use Hyphens</strong></td>
+                            <td><code>/api/menu-items</code></td>
+                            <td><code>/api/menu_items</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Lowercase Only</strong></td>
+                            <td><code>/api/menu-items</code></td>
+                            <td><code>/api/MenuItems</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>5. No Trailing Slash</strong></td>
+                            <td><code>/api/menu-items</code></td>
+                            <td><code>/api/menu-items/</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>6. Hierarchical</strong></td>
+                            <td><code>/api/orders/5/items</code></td>
+                            <td><code>/api/order-items?order_id=5</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Complete Endpoint List Example</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>URI</th>
+                            <th>Description</th>
+                            <th>Auth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td><code>/api/menu-items</code></td>
+                            <td>List all menu items</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td><code>/api/menu-items?category=main</code></td>
+                            <td>Filter by category</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td><code>/api/menu-items/{id}</code></td>
+                            <td>Get single item</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td><code>/api/menu-items</code></td>
+                            <td>Create new item</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>PUT</td>
+                            <td><code>/api/menu-items/{id}</code></td>
+                            <td>Update item</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>DELETE</td>
+                            <td><code>/api/menu-items/{id}</code></td>
+                            <td>Delete item</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td><code>/api/orders/{orderId}/items</code></td>
+                            <td>List items in order</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td><code>/api/orders/{orderId}/items</code></td>
+                            <td>Add item to order</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <td>GET</td>
+                            <td><code>/api/customers/{id}/orders</code></td>
+                            <td>Get customer orders</td>
+                            <td>Yes</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 4 Grading Rubric (25 Points)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Criteria</th>
+                            <th>Points</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>URI Structure</td>
+                            <td>8</td>
+                            <td>Plural nouns, no verbs, proper hierarchy</td>
+                        </tr>
+                        <tr>
+                            <td>Hierarchical Routes</td>
+                            <td>6</td>
+                            <td>Nested resources properly implemented</td>
+                        </tr>
+                        <tr>
+                            <td>Query Parameters</td>
+                            <td>4</td>
+                            <td>Filtering, sorting, pagination working</td>
+                        </tr>
+                        <tr>
+                            <td>Documentation</td>
+                            <td>5</td>
+                            <td>Complete, clear API documentation</td>
+                        </tr>
+                        <tr>
+                            <td>Justification</td>
+                            <td>2</td>
+                            <td>Clear explanation of design decisions</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Grading -->
+            <section id="grading">
+                <h2>Complete Project Grading</h2>
+                
+                <h3>Overall Grade Distribution</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Weight</th>
+                            <th>Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Phase 1: Models & Scaffolding</td>
+                            <td>25%</td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 2: Bootstrap Integration</td>
+                            <td>25%</td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 3: REST Principles</td>
+                            <td>25%</td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td>Phase 4: URI Design</td>
+                            <td>25%</td>
+                            <td>25</td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>Total</strong></td>
+                            <td><strong>100%</strong></td>
+                            <td><strong>100</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Bonus Challenges</td>
+                            <td>+5%</td>
+                            <td>+5</td>
+                        </tr>
+                        <tr style="background: #fff3cd;">
+                            <td><strong>Maximum Possible</strong></td>
+                            <td><strong>105%</strong></td>
+                            <td><strong>105</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Grade Scale</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Percentage</th>
+                            <th>Letter Grade</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #d4edda;">
+                            <td>90-100%</td>
+                            <td><strong>A</strong></td>
+                            <td>Excellent</td>
+                        </tr>
+                        <tr style="background: #d1ecf1;">
+                            <td>80-89%</td>
+                            <td><strong>B</strong></td>
+                            <td>Good</td>
+                        </tr>
+                        <tr style="background: #fff3cd;">
+                            <td>70-79%</td>
+                            <td><strong>C</strong></td>
+                            <td>Satisfactory</td>
+                        </tr>
+                        <tr style="background: #f8d7da;">
+                            <td>60-69%</td>
+                            <td><strong>D</strong></td>
+                            <td>Pass</td>
+                        </tr>
+                        <tr style="background: #f8d7da;">
+                            <td>&lt;60%</td>
+                            <td><strong>F</strong></td>
+                            <td>Fail</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Deductions</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Violation</th>
+                            <th>Penalty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Late submission (per day)</td>
+                            <td>-5 points</td>
+                        </tr>
+                        <tr>
+                            <td>Plagiarism (detected)</td>
+                            <td>-100 points (F grade)</td>
+                        </tr>
+                        <tr>
+                            <td>Incomplete documentation</td>
+                            <td>-10 points</td>
+                        </tr>
+                        <tr>
+                            <td>Non-functional code</td>
+                            <td>-20 points</td>
+                        </tr>
+                        <tr>
+                            <td>Missing GitHub repository</td>
+                            <td>-15 points</td>
+                        </tr>
+                        <tr>
+                            <td>No video demonstration</td>
+                            <td>-5 points</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+
+            <!-- Common Mistakes -->
+            <section id="mistakes">
+                <h2>Common Mistakes to Avoid</h2>
+                
+                <div class="danger-box">
+                    <h3>❌ Top 10 Mistakes Students Make</h3>
+                </div>
+
+                <h3>Phase 1 Mistakes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mistake</th>
+                            <th>Impact</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>No model relationships</td>
+                            <td>Cannot fetch related data</td>
+                            <td>Define hasMany/belongsTo relationships</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Missing validation</td>
+                            <td>Invalid data in database</td>
+                            <td>Add validation rules in controller</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Not using migrations</td>
+                            <td>Schema inconsistency</td>
+                            <td>Always use framework migrations</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 2 Mistakes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mistake</th>
+                            <th>Impact</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>4</td>
+                            <td>Not using Bootstrap grid</td>
+                            <td>Not responsive</td>
+                            <td>Use col-* classes properly</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Missing viewport meta tag</td>
+                            <td>Mobile rendering issues</td>
+                            <td>Add viewport meta tag in head</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Inline styles instead of classes</td>
+                            <td>Inconsistent design</td>
+                            <td>Use Bootstrap classes</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 3 Mistakes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mistake</th>
+                            <th>Impact</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>7</td>
+                            <td>Using sessions (stateful)</td>
+                            <td>Not scalable</td>
+                            <td>Use token-based authentication</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>Wrong HTTP methods</td>
+                            <td>Not RESTful</td>
+                            <td>Use POST for create, PUT for update</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>Incorrect status codes</td>
+                            <td>Confusing API responses</td>
+                            <td>Use 201 for create, 404 for not found</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 4 Mistakes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mistake</th>
+                            <th>Impact</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>10</td>
+                            <td>Verbs in URIs</td>
+                            <td>Not RESTful</td>
+                            <td>Use nouns only, method indicates action</td>
+                        </tr>
+                        <tr>
+                            <td>11</td>
+                            <td>Singular nouns</td>
+                            <td>Inconsistent API</td>
+                            <td>Always use plural nouns</td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>Not using hierarchy</td>
+                            <td>Poor API design</td>
+                            <td>Use /orders/5/items structure</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Viva Questions -->
+            <section id="viva">
+                <h2>Viva Questions</h2>
+                
+                <div class="info-box">
+                    <strong>Note:</strong> These questions will be asked during the final viva examination. Prepare answers with examples from your project.
+                </div>
+
+                <h3>Phase 1 Questions (MVC & Scaffolding)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Q#</th>
+                            <th>Question</th>
+                            <th>Key Points to Cover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>What is MVC architecture and why is it important?</td>
+                            <td>Separation of concerns, maintainability, testability</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Explain the difference between Model and Controller</td>
+                            <td>Model = data/logic, Controller = request handling</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>What is scaffolding and how does it improve productivity?</td>
+                            <td>Auto code generation, consistency, best practices</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>What are migrations and why use them?</td>
+                            <td>Version control for database, team collaboration</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Explain the relationship between Order and OrderItem</td>
+                            <td>One-to-Many, foreign keys, cascade delete</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 2 Questions (Bootstrap)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Q#</th>
+                            <th>Question</th>
+                            <th>Key Points to Cover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>6</td>
+                            <td>How does Bootstrap's 12-column grid work?</td>
+                            <td>12 equal columns, responsive breakpoints, col-* classes</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>What is mobile-first design?</td>
+                            <td>Design for mobile first, enhance for larger screens</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>Explain col-md-6 vs col-lg-6</td>
+                            <td>Different breakpoints (768px vs 992px)</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>What is the purpose of viewport meta tag?</td>
+                            <td>Controls page dimensions on mobile devices</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>Why use Bootstrap instead of custom CSS?</td>
+                            <td>Faster development, consistency, tested, responsive</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 3 Questions (REST Principles)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Q#</th>
+                            <th>Question</th>
+                            <th>Key Points to Cover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>11</td>
+                            <td>What is statelessness in REST?</td>
+                            <td>No client context on server, all info in request</td>
+                        </tr>
+                        <tr>
+                            <td>12</td>
+                            <td>Difference between stateful and stateless auth?</td>
+                            <td>Sessions vs tokens, scalability implications</td>
+                        </tr>
+                        <tr>
+                            <td>13</td>
+                            <td>What is idempotency? Give examples.</td>
+                            <td>Same result on multiple calls, GET/PUT/DELETE are</td>
+                        </tr>
+                        <tr>
+                            <td>14</td>
+                            <td>Why is POST not idempotent?</td>
+                            <td>Creates new resource each time, different IDs</td>
+                        </tr>
+                        <tr>
+                            <td>15</td>
+                            <td>What status code for creating a resource?</td>
+                            <td>201 Created, with Location header</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Phase 4 Questions (URI Design)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Q#</th>
+                            <th>Question</th>
+                            <th>Key Points to Cover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>16</td>
+                            <td>Why use plural nouns in REST URIs?</td>
+                            <td>Represents collections, consistent pattern</td>
+                        </tr>
+                        <tr>
+                            <td>17</td>
+                            <td>Why avoid verbs in REST URIs?</td>
+                            <td>HTTP method indicates action, URI identifies resource</td>
+                        </tr>
+                        <tr>
+                            <td>18</td>
+                            <td>Explain hierarchical URI with example</td>
+                            <td>/orders/5/items shows parent-child relationship</td>
+                        </tr>
+                        <tr>
+                            <td>19</td>
+                            <td>Query params vs path params?</td>
+                            <td>Path for ID, query for filtering/sorting</td>
+                        </tr>
+                        <tr>
+                            <td>20</td>
+                            <td>Difference between PUT and PATCH?</td>
+                            <td>PUT replaces entire, PATCH updates specific fields</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Bonus Challenges -->
+            <section id="bonus">
+                <h2>Bonus Challenges (+5 Points Each)</h2>
+                
+                <div class="success-box">
+                    <strong>Complete ANY ONE for bonus points!</strong>
+                </div>
+
+                <h3>Challenge 1: Advanced Search (+5 points)</h3>
+                <ul>
+                    <li>Full-text search across multiple fields</li>
+                    <li>Fuzzy matching (typo tolerance)</li>
+                    <li>Search highlighting in results</li>
+                    <li>Search suggestions/autocomplete</li>
+                </ul>
+
+                <h3>Challenge 2: Real-time Order Tracking (+5 points)</h3>
+                <ul>
+                    <li>WebSocket-based real-time updates</li>
+                    <li>Order status updates without refresh</li>
+                    <li>Live order notifications</li>
+                    <li>Real-time cart updates</li>
+                </ul>
+
+                <h3>Challenge 3: Payment Integration (+5 points)</h3>
+                <ul>
+                    <li>Stripe or PayPal integration</li>
+                    <li>Secure payment processing</li>
+                    <li>Order confirmation after payment</li>
+                    <li>Payment history</li>
+                </ul>
+
+                <h3>Challenge 4: Advanced API Features (+5 points)</h3>
+                <ul>
+                    <li>API versioning (/api/v1/, /api/v2/)</li>
+                    <li>Rate limiting (max requests per minute)</li>
+                    <li>API key management</li>
+                    <li>Request/response logging</li>
+                </ul>
+
+                <h3>Challenge 5: Comprehensive Testing (+5 points)</h3>
+                <ul>
+                    <li>Unit tests for models (10+ tests)</li>
+                    <li>Integration tests for API (15+ tests)</li>
+                    <li>Feature tests for UI (10+ tests)</li>
+                    <li>Test coverage report (&gt;80%)</li>
+                </ul>
+            </section>
+
+            <!-- Submission Checklist -->
+            <section id="checklist">
+                <h2>Final Submission Checklist</h2>
+                
+                <h3>Code Quality</h3>
+                <ul class="checkbox-list">
+                    <li>All code properly formatted and indented</li>
+                    <li>No commented-out code blocks</li>
+                    <li>Meaningful variable and function names</li>
+                    <li>Code follows framework conventions</li>
+                    <li>No hardcoded credentials (use .env)</li>
+                    <li>.gitignore properly configured</li>
+                </ul>
+
+                <h3>Functionality</h3>
+                <ul class="checkbox-list">
+                    <li>All CRUD operations work</li>
+                    <li>Forms validate input</li>
+                    <li>Error messages display properly</li>
+                    <li>Responsive design works on mobile</li>
+                    <li>API returns correct status codes</li>
+                    <li>Authentication works correctly</li>
+                </ul>
+
+                <h3>Documentation</h3>
+                <ul class="checkbox-list">
+                    <li>README.md with setup instructions</li>
+                    <li>All phases documented (PDF)</li>
+                    <li>Screenshots included</li>
+                    <li>API documentation complete</li>
+                    <li>Code comments where necessary</li>
+                    <li>Database schema documented</li>
+                </ul>
+
+                <h3>GitHub Repository</h3>
+                <ul class="checkbox-list">
+                    <li>Repository is public or instructor has access</li>
+                    <li>All code committed and pushed</li>
+                    <li>Meaningful commit messages</li>
+                    <li>.env.example file included</li>
+                    <li>README.md in root directory</li>
+                    <li>No sensitive data committed</li>
+                </ul>
+
+                <h3>Deliverables</h3>
+                <ul class="checkbox-list">
+                    <li>Phase 1 documentation (PDF)</li>
+                    <li>Phase 2 documentation (PDF)</li>
+                    <li>Phase 3 documentation (PDF)</li>
+                    <li>Phase 4 documentation (PDF)</li>
+                    <li>Postman collection (JSON)</li>
+                    <li>Video demonstration (link)</li>
+                    <li>All screenshots clear and labeled</li>
+                </ul>
+            </section>
+
+            <!-- Footer -->
+            <section style="background: #2c3e50; color: white; padding: 40px; text-align: center; margin-top: 50px;">
+                <h2 style="color: white; border: none;">Good Luck with Your Project! 🚀</h2>
+                <p style="font-size: 1.2em; margin: 20px 0;">Remember: Start early, test frequently, document as you go!</p>
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #34495e;">
+                    <p><strong>Document Version:</strong> 1.0</p>
+                    <p><strong>Last Updated:</strong> January 2024</p>
+                    <p><strong>Course:</strong> CS-301 Web Development</p>
+                    <p><strong>Department:</strong> Computer Science</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Print button
+        function printManual() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

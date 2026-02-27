@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Food Ordering System' %></title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS with cache busting -->
+    <link href="/css/style.css?v=<%= Date.now() %>" rel="stylesheet">
+    
+    <style>
+        /* FOODPANDA PREMIUM DESIGN - Inline to ensure loading */
+        :root {
+            --primary: #d70f64;
+            --primary-light: #ff1f7d;
+            --secondary: #ff6b9d;
+            --accent: #ffc107;
+            --light: #ffffff;
+            --gray-900: #212121;
+            --gray-700: #616161;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%) !important;
+        }
+        
+        /* PINK GRADIENT NAVBAR */
+        .navbar {
+            background: linear-gradient(135deg, #d70f64 0%, #ff1f7d 100%) !important;
+            box-shadow: 0 8px 32px rgba(215, 15, 100, 0.25) !important;
+            padding: 18px 0 !important;
+        }
+        
+        .navbar-brand {
+            font-size: 2rem !important;
+            font-weight: 900 !important;
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+        }
+        
+        .navbar-brand i {
+            color: #ffc107 !important;
+            font-size: 2.2rem !important;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 12px !important;
+            transition: all 0.3s !important;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2) !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        /* PREMIUM HERO */
+        .hero-section {
+            background: linear-gradient(135deg, #d70f64 0%, #ff1f7d 50%, #ff6b9d 100%) !important;
+            padding: 100px 0 !important;
+            color: #ffffff !important;
+        }
+        
+        .hero-section h1 {
+            font-size: 4rem !important;
+            font-weight: 900 !important;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+        }
+        
+        /* PREMIUM CARDS */
+        .card {
+            border: none !important;
+            border-radius: 24px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important;
+            transition: all 0.5s !important;
+        }
+        
+        .card:hover {
+            transform: translateY(-15px) scale(1.02) !important;
+            box-shadow: 0 25px 60px rgba(215, 15, 100, 0.25) !important;
+        }
+        
+        .card-img-top {
+            height: 240px !important;
+            object-fit: cover !important;
+            transition: transform 0.6s !important;
+        }
+        
+        .card:hover .card-img-top {
+            transform: scale(1.15) !important;
+        }
+        
+        /* PREMIUM BUTTONS */
+        .btn-primary {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%) !important;
+            color: #d70f64 !important;
+            font-weight: 700 !important;
+            border-radius: 50px !important;
+            padding: 14px 35px !important;
+            box-shadow: 0 10px 30px rgba(215, 15, 100, 0.4) !important;
+            border: none !important;
+            transition: all 0.4s !important;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.05) !important;
+            box-shadow: 0 15px 40px rgba(215, 15, 100, 0.5) !important;
+        }
+        
+        .btn-outline-light {
+            border: 3px solid #ffffff !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            border-radius: 50px !important;
+            padding: 14px 35px !important;
+        }
+        
+        .btn-outline-light:hover {
+            background: #ffffff !important;
+            color: #d70f64 !important;
+            transform: translateY(-5px) !important;
+        }
+        
+        /* PRICE TAG */
+        .price-tag {
+            font-size: 1.6rem !important;
+            font-weight: 900 !important;
+            background: linear-gradient(135deg, #d70f64 0%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* FEATURE CARDS */
+        .feature-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%) !important;
+            padding: 50px 35px !important;
+            border-radius: 24px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+            transition: all 0.5s !important;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-15px) scale(1.03) !important;
+            box-shadow: 0 25px 60px rgba(215, 15, 100, 0.2) !important;
+        }
+        
+        .feature-card i {
+            font-size: 4.5rem !important;
+            background: linear-gradient(135deg, #d70f64 0%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px !important;
+        }
+        
+        /* STAT CARDS */
+        .stat-card {
+            background: linear-gradient(135deg, #d70f64 0%, #ff6b9d 100%) !important;
+            padding: 40px !important;
+            border-radius: 24px !important;
+            box-shadow: 0 15px 50px rgba(215, 15, 100, 0.35) !important;
+            transition: all 0.5s !important;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.05) !important;
+        }
+        
+        .stat-card h2 {
+            font-size: 3rem !important;
+            font-weight: 900 !important;
+            color: #ffffff !important;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        }
+        
+        .stat-card p {
+            color: rgba(255,255,255,0.95) !important;
+            font-weight: 600 !important;
+        }
+        
+        /* FOOTER */
+        footer {
+            background: linear-gradient(135deg, #212121 0%, #1a1a1a 100%) !important;
+            color: #ffffff !important;
+            padding: 60px 0 35px !important;
+            margin-top: 100px !important;
+        }
+        
+        footer strong {
+            background: linear-gradient(135deg, #d70f64 0%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900 !important;
+        }
+        
+        /* SCROLL TO TOP */
+        .scroll-to-top {
+            position: fixed !important;
+            bottom: 35px !important;
+            right: 35px !important;
+            width: 60px !important;
+            height: 60px !important;
+            background: linear-gradient(135deg, #d70f64 0%, #ff6b9d 100%) !important;
+            color: #ffffff !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 10px 35px rgba(215, 15, 100, 0.5) !important;
+            transition: all 0.4s !important;
+            z-index: 999 !important;
+        }
+        
+        .scroll-to-top:hover {
+            transform: translateY(-10px) scale(1.1) !important;
+        }
+        
+        /* TEXT GRADIENT */
+        .text-gradient {
+            background: linear-gradient(135deg, #d70f64 0%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900 !important;
+        }
+        
+        /* BADGES */
+        .badge {
+            padding: 8px 16px !important;
+            border-radius: 50px !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+        }
+        
+        .badge.bg-primary {
+            background: linear-gradient(135deg, #d70f64 0%, #ff1f7d 100%) !important;
+        }
+        
+        .badge.bg-secondary {
+            background: linear-gradient(135deg, #616161 0%, #212121 100%) !important;
+        }
+        
+        /* ANIMATIONS */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-80px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .animate-slide-left {
+            animation: slideInLeft 0.8s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Enhanced Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shop"></i> FoodHub
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-door"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/menu-items"><i class="bi bi-grid"></i> Menu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/orders"><i class="bi bi-bag-check"></i> Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/menu-items" target="_blank">
+                            <i class="bi bi-code-square"></i> API
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <%- body %>
+    </main>
+
+    <!-- Enhanced Footer -->
+    <footer>
+        <div class="container text-center">
+            <p class="mb-2"><strong>FoodHub</strong> - Your Favorite Food Ordering Platform</p>
+            <p class="mb-0">© 2024 Food Ordering System | Web Development Course Project</p>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <div class="scroll-to-top" onclick="scrollToTop()" style="display: none;" id="scrollBtn">
+        <i class="bi bi-arrow-up"></i>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Scroll to top functionality
+        window.onscroll = function() {
+            const scrollBtn = document.getElementById('scrollBtn');
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                scrollBtn.style.display = 'flex';
+            } else {
+                scrollBtn.style.display = 'none';
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Add active class to current nav item
+        const currentLocation = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentLocation) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

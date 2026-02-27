@@ -1,0 +1,189 @@
+<div class="container mt-5 mb-5">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-3 fw-bold text-gradient">Our Menu</h1>
+            <p class="lead text-muted">Discover our delicious selection of food items</p>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="d-flex gap-2">
+                <span class="badge bg-primary" style="font-size: 1rem; padding: 10px 20px;">
+                    <i class="bi bi-grid"></i> <%= menuItems.length %> Items Available
+                </span>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/menu-items/create" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle"></i> Add New Item
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-funnel"></i> Category
+                </label>
+                <select class="form-select" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="appetizer">🥗 Appetizers</option>
+                    <option value="main">🍕 Main Course</option>
+                    <option value="dessert">🍰 Desserts</option>
+                    <option value="beverage">🥤 Beverages</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-search"></i> Search
+                </label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search for delicious food...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-sort-down"></i> Sort By
+                </label>
+                <select class="form-select" id="sortSelect">
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="price-asc">Price (Low to High)</option>
+                    <option value="price-desc">Price (High to Low)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div class="row g-4" id="menuItemsGrid">
+        <% if (menuItems.length === 0) { %>
+        <div class="col-12">
+            <div class="alert alert-info text-center p-5" style="border-radius: 20px;">
+                <i class="bi bi-info-circle" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No menu items found</h4>
+                <p>Start by adding your first delicious item!</p>
+                <a href="/menu-items/create" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle"></i> Add First Item
+                </a>
+            </div>
+        </div>
+        <% } else { %>
+            <% menuItems.forEach((item, index) => { %>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 animate-slide-left" 
+                 style="animation-delay: <%= index * 0.05 %>s;"
+                 data-category="<%= item.category %>" 
+                 data-name="<%= item.name.toLowerCase() %>" 
+                 data-price="<%= item.price %>">
+                <div class="card h-100">
+                    <div style="overflow: hidden; border-radius: 20px 20px 0 0; position: relative;">
+                        <img src="<%= item.image_url %>" class="card-img-top" alt="<%= item.name %>">
+                        <% if (item.is_available) { %>
+                            <span class="badge bg-success position-absolute top-0 end-0 m-3">
+                                <i class="bi bi-check-circle"></i> Available
+                            </span>
+                        <% } else { %>
+                            <span class="badge bg-danger position-absolute top-0 end-0 m-3">
+                                <i class="bi bi-x-circle"></i> Out of Stock
+                            </span>
+                        <% } %>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title"><%= item.name %></h5>
+                        <p class="card-text text-muted small"><%= item.description %></p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-secondary">
+                                    <% if (item.category === 'appetizer') { %>🥗
+                                    <% } else if (item.category === 'main') { %>🍕
+                                    <% } else if (item.category === 'dessert') { %>🍰
+                                    <% } else { %>🥤<% } %>
+                                    <%= item.category %>
+                                </span>
+                                <span class="price-tag">$<%= item.price.toFixed(2) %></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="btn-group w-100" role="group">
+                            <a href="/menu-items/<%= item.id %>" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="/menu-items/<%= item.id %>/edit" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal<%= item.id %>">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Modal -->
+            <div class="modal fade" id="deleteModal<%= item.id %>" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center p-4">
+                            <i class="bi bi-trash" style="font-size: 4rem; color: var(--danger);"></i>
+                            <h5 class="mt-3">Are you sure?</h5>
+                            <p class="text-muted">Do you really want to delete "<strong><%= item.name %></strong>"? This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                            <form action="/menu-items/<%= item.id %>?_method=DELETE" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        <% } %>
+    </div>
+</div>
+
+<script>
+// Enhanced filtering with animations
+document.getElementById('categoryFilter').addEventListener('change', filterItems);
+document.getElementById('searchInput').addEventListener('input', filterItems);
+
+function filterItems() {
+    const category = document.getElementById('categoryFilter').value.toLowerCase();
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('#menuItemsGrid > div[data-category]');
+
+    cards.forEach((card, index) => {
+        const cardCategory = card.getAttribute('data-category').toLowerCase();
+        const cardName = card.getAttribute('data-name').toLowerCase();
+        
+        const matchesCategory = !category || cardCategory === category;
+        const matchesSearch = !search || cardName.includes(search);
+        
+        if (matchesCategory && matchesSearch) {
+            card.style.display = '';
+            card.style.animation = `slideInLeft 0.5s ease ${index * 0.05}s both`;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>

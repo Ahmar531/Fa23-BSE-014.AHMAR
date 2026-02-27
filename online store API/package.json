@@ -1,0 +1,15 @@
+{
+  "name": "mini-online-store-api",
+  "version": "1.0.0",
+  "description": "Express.js Lab Project demonstrating MVC Pattern and Middleware",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": ["express", "mvc", "middleware", "rest-api"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
