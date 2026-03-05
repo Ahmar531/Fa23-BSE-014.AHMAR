@@ -26,7 +26,7 @@ const productRoutes = require('./routes/products');
 const userRoutes = require('./routes/users');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 // ========== BUILT-IN MIDDLEWARE ==========
 // Parse incoming JSON requests (req.body)
