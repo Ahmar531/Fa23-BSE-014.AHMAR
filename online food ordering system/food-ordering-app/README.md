@@ -2,6 +2,26 @@
 
 A complete MVC-based Food Ordering System built with Node.js, Express, and Bootstrap.
 
+output 1
+# 📌 Project Screenshots
+
+## 🖥️ Home Screen
+![Home Screen](https://github.com/user-attachments/assets/86bc6a25-d8a1-46a8-9145-38aa4dd5fe1f)
+
+## 📊 Dashboard View
+![Dashboard](https://github.com/user-attachments/assets/48f90c17-aff1-4be3-a703-9c8082622bd6)
+
+## 📁 Feature Page
+![Feature Page](https://github.com/user-attachments/assets/ce531385-d168-4629-a81f-f27ea7d8f994)
+
+## ⚙️ Settings Page
+![Settings](https://github.com/user-attachments/assets/d5ca873f-5f74-458c-9f44-8a6db290a8b9)
+
+## 📈 Final Output
+![Final Output](https://github.com/user-attachments/assets/a5e9fcb1-3f04-488f-9c81-7c7431cf6113)
+
+
+
 ## Features
 
 ✅ **Phase 1: MVC Architecture**

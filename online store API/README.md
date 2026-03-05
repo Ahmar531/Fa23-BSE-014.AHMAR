@@ -4,6 +4,15 @@ A complete Express.js lab project demonstrating **MVC Pattern**, **Middleware**,
 
 ## 📁 Project Structure
 
+## 📱 Mobile View Screenshots
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6adee50e-55f7-4441-9d0b-77c55f5eb9d0" width="300"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/69e8c511-b242-4b43-996e-96d4d7ecddd5" width="300"/>
+</p>
 ```
 project-folder/
 │
