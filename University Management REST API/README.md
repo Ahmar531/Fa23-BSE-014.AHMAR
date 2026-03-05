@@ -2,6 +2,23 @@
 ## Complete Project Guide — Based on Lecture Notes
 
 ---
+output
+## 📸 Project Output
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/a42b271d-3612-4e03-abcc-9262eb282f7b" width="45%" />
+  <img src="https://github.com/user-attachments/assets/2f4561e5-a0b4-4dda-8f3e-ba626025d783" width="45%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ff4366d4-cfc6-4184-b8e1-80565b3ed34f" width="45%" />
+  <img src="https://github.com/user-attachments/assets/287bf5e1-12a0-40a1-bc2f-87613ff82841" width="45%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2ade1b30-e1bd-4cf1-b1af-78fcb32eb7b2" width="60%" />
+</p>
+
 
 ## 📁 Project Structure
 
