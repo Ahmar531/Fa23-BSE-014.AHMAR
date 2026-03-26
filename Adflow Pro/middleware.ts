@@ -38,28 +38,28 @@ export async function middleware(request: NextRequest) {
 
     // Refresh session if expired
     await supabase.auth.getUser();
+
+    // Protected routes
+    const protectedPaths = ['/dashboard', '/admin', '/moderator'];
+    const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+
+    if (isProtectedPath) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        const redirectUrl = new URL('/auth/login', request.url);
+        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+
+    return response;
   } catch (error) {
     console.error('Middleware error:', error);
     return response;
   }
-
-  // Protected routes
-  const protectedPaths = ['/dashboard'];
-  const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
-
-  if (isProtectedPath) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      const redirectUrl = new URL('/auth/login', request.url);
-      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  return response;
 }
 
 export const config = {
