@@ -476,11 +476,26 @@ CREATE POLICY "ads_insert_client" ON public.ads
 
 -- Owners can update their own draft ads
 CREATE POLICY "ads_update_own_draft" ON public.ads
-  FOR UPDATE USING (user_id = auth.uid() AND status = 'draft');
+  FOR UPDATE
+  USING (user_id = auth.uid() AND status IN ('draft', 'submitted'))
+  WITH CHECK (user_id = auth.uid() AND status IN ('draft', 'submitted'));
+
+CREATE POLICY "ads_update_own_payment_submission" ON public.ads
+  FOR UPDATE
+  USING (user_id = auth.uid() AND status = 'payment_pending')
+  WITH CHECK (user_id = auth.uid() AND status = 'payment_submitted');
 
 -- Moderators can update status (to under_review, payment_pending)
 CREATE POLICY "ads_update_moderator" ON public.ads
-  FOR UPDATE USING (get_user_role() IN ('moderator', 'admin', 'super_admin'));
+  FOR UPDATE
+  USING (
+    get_user_role() IN ('moderator', 'admin', 'super_admin')
+    AND status IN ('submitted', 'under_review')
+  )
+  WITH CHECK (
+    get_user_role() IN ('moderator', 'admin', 'super_admin')
+    AND status IN ('under_review', 'payment_pending', 'archived')
+  );
 
 -- Soft delete (admin only)
 CREATE POLICY "ads_delete_admin" ON public.ads
@@ -518,8 +533,14 @@ CREATE POLICY "ad_media_admin" ON public.ad_media
 CREATE POLICY "payments_select_own" ON public.payments FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "payments_select_staff" ON public.payments FOR SELECT USING (get_user_role() IN ('admin', 'super_admin'));
 CREATE POLICY "payments_insert_own" ON public.payments FOR INSERT WITH CHECK (user_id = auth.uid());
-CREATE POLICY "payments_update_own" ON public.payments FOR UPDATE USING (user_id = auth.uid() AND status = 'pending');
-CREATE POLICY "payments_update_admin" ON public.payments FOR UPDATE USING (get_user_role() IN ('admin', 'super_admin'));
+CREATE POLICY "payments_update_own" ON public.payments
+  FOR UPDATE
+  USING (user_id = auth.uid() AND status IN ('pending', 'rejected'))
+  WITH CHECK (user_id = auth.uid() AND status = 'submitted');
+CREATE POLICY "payments_update_admin" ON public.payments
+  FOR UPDATE
+  USING (get_user_role() IN ('admin', 'super_admin'))
+  WITH CHECK (get_user_role() IN ('admin', 'super_admin'));
 
 -- NOTIFICATIONS policies
 CREATE POLICY "notifications_select_own" ON public.notifications FOR SELECT USING (user_id = auth.uid());
@@ -538,6 +559,19 @@ CREATE POLICY "status_history_select_own" ON public.ad_status_history
   );
 CREATE POLICY "status_history_select_staff" ON public.ad_status_history
   FOR SELECT USING (get_user_role() IN ('moderator', 'admin', 'super_admin'));
+CREATE POLICY "status_history_insert_actor" ON public.ad_status_history
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.ads
+      WHERE ads.id = ad_status_history.ad_id
+        AND (
+          ads.user_id = auth.uid()
+          OR get_user_role() IN ('moderator', 'admin', 'super_admin')
+        )
+    )
+  );
 
 -- LEARNING_QUESTIONS policies
 CREATE POLICY "learning_questions_select_all" ON public.learning_questions FOR SELECT USING (is_active = true);

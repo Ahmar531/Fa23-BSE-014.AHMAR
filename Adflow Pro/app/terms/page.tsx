@@ -1,141 +1,53 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+
+const sections = [
+  ['Acceptance of Terms', 'Using AdFlow Pro means you agree to the marketplace workflow, moderation rules, payment verification process, and public listing policies.'],
+  ['Account Responsibility', 'Users are responsible for account security, submitted content, and the accuracy of listing, business, and payment information.'],
+  ['Content Guidelines', 'All sponsored listings must be lawful, accurate, non-misleading, and free from abusive, duplicate, or prohibited content.'],
+  ['Payments and Refunds', 'Payments are reviewed manually. Refund decisions are made before publication; once a listing goes live, refund eligibility is limited.'],
+  ['Moderation Rights', 'AdFlow Pro may approve, reject, archive, or request revisions for any listing that does not meet quality or policy requirements.'],
+  ['Expiry and Visibility', 'Only published, non-expired ads are public. Expired listings are removed from public results automatically.'],
+  ['Liability Limits', 'The service is provided as-is. We are not responsible for indirect or consequential losses resulting from platform usage.'],
+  ['Policy Updates', 'Terms may change over time. Continued use of the platform constitutes acceptance of the latest published version.'],
+];
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-primary">
-            AdFlow Pro
-          </Link>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.12),_transparent_26%),linear-gradient(180deg,_#fffaf5_0%,_#ffffff_45%,_#f8fafc_100%)]">
+      <header className="sticky top-0 z-20 border-b border-white/50 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" className="text-xl font-semibold tracking-tight text-slate-950">AdFlow Pro</Link>
           <Link href="/">
-            <Button variant="ghost" size="sm">
-              Back to Home
-            </Button>
+            <Button variant="ghost" className="rounded-full">Back Home</Button>
           </Link>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="rounded-[2rem] bg-slate-950 px-6 py-8 text-white shadow-[0_40px_120px_rgba(15,23,42,0.22)] lg:px-10">
+          <p className="text-xs uppercase tracking-[0.35em] text-orange-300">Legal Framework</p>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Terms of service for the AdFlow Pro marketplace.</h1>
+          <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
+            These terms govern how listings are submitted, reviewed, paid for, published, and retired from the public marketplace.
+          </p>
+        </section>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>1. Acceptance of Terms</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              By accessing and using AdFlow Pro, you accept and agree to be bound by the terms and
-              provision of this agreement. If you do not agree to these terms, please do not use our
-              service.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="mt-8 space-y-4">
+          {sections.map(([title, body], index) => (
+            <Card key={title} className="rounded-[1.75rem] border-slate-200 bg-white/85 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <CardContent className="p-6">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Section {index + 1}</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{title}</h2>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>2. User Accounts</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              You are responsible for maintaining the confidentiality of your account credentials and
-              for all activities that occur under your account. You must notify us immediately of any
-              unauthorized use of your account.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>3. Ad Content Guidelines</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>All ads must comply with the following guidelines:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Content must be legal, truthful, and not misleading</li>
-              <li>No spam, duplicate, or low-quality content</li>
-              <li>No adult content, illegal products, or services</li>
-              <li>No hate speech, discrimination, or offensive material</li>
-              <li>Must respect intellectual property rights</li>
-            </ul>
-            <p className="mt-4">
-              We reserve the right to reject or remove any ad that violates these guidelines.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>4. Payment and Refunds</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              All payments must be made in advance. Refunds are available only before your ad is
-              published. Once an ad is live, no refunds will be issued. Package durations start from
-              the publish date, not the payment date.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>5. Moderation and Approval</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              All ads undergo moderation review before publication. We reserve the right to reject any
-              ad without providing a detailed reason. Typical review time is 12-24 hours, but may vary
-              during high-volume periods.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>6. Limitation of Liability</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              AdFlow Pro is provided "as is" without warranties of any kind. We are not responsible
-              for any direct, indirect, incidental, or consequential damages arising from your use of
-              the service.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>7. Changes to Terms</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              We reserve the right to modify these terms at any time. Changes will be effective
-              immediately upon posting. Your continued use of the service constitutes acceptance of the
-              modified terms.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>8. Contact</CardTitle>
-          </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p>
-              For questions about these terms, please contact us at{' '}
-              <a href="mailto:legal@adflowpro.com" className="text-primary hover:underline">
-                legal@adflowpro.com
-              </a>
-            </p>
-          </CardContent>
-        </Card>
-
-        <p className="text-sm text-muted-foreground text-center mt-8">
-          Last updated: March 19, 2026
-        </p>
-      </div>
+        <p className="mt-8 text-center text-sm text-slate-500">Last updated: March 30, 2026</p>
+      </main>
     </div>
   );
 }

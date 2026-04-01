@@ -1,229 +1,153 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import { BadgeCheck, Globe, Mail, MapPin, Phone, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
-import { Mail, Phone, Globe, MapPin, Tag, Eye } from 'lucide-react';
 import { getPlaceholderImage } from '@/lib/media';
+import { formatCurrency } from '@/lib/utils';
 
 export default async function AdDetailPage({ params }: { params: { slug: string } }) {
   const supabase = await createClient();
+  const { data: ad } = await supabase.from('v_public_ads').select('*').eq('slug', params.slug).single();
 
-  // Fetch ad with relations
-  const { data: ad } = await supabase
-    .from('v_public_ads')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
+  if (!ad) notFound();
 
-  if (!ad) {
-    notFound();
-  }
+  const { data: media } = await supabase.from('ad_media').select('*').eq('ad_id', ad.id).order('sort_order');
+  supabase.from('ads').update({ view_count: ad.view_count + 1 }).eq('id', ad.id).then();
 
-  // Fetch media
-  const { data: media } = await supabase
-    .from('ad_media')
-    .select('*')
-    .eq('ad_id', ad.id)
-    .order('sort_order');
-
-  // Increment view count (fire and forget)
-  supabase
-    .from('ads')
-    .update({ view_count: ad.view_count + 1 })
-    .eq('id', ad.id)
-    .then();
-
-  const primaryMedia = media?.[0];
+  const heroMedia = media?.[0];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-primary">
-            AdFlow Pro
-          </Link>
-          <Link href="/explore">
-            <Button variant="ghost" size="sm">
-              Back to Explore
-            </Button>
-          </Link>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.16),_transparent_24%),linear-gradient(180deg,_#fffaf5_0%,_#ffffff_45%,_#f8fafc_100%)]">
+      <header className="sticky top-0 z-20 border-b border-white/50 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" className="text-xl font-semibold tracking-tight text-slate-950">AdFlow Pro</Link>
+          <div className="flex items-center gap-3">
+            <Link href="/explore">
+              <Button variant="ghost" className="rounded-full">Back to Explore</Button>
+            </Link>
+            <Link href="/auth/register">
+              <Button className="rounded-full bg-slate-950 hover:bg-slate-800">Launch Your Ad</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-start gap-3 mb-4">
-                  {ad.is_featured && <Badge variant="secondary">Featured</Badge>}
-                  {ad.is_verified_seller && <Badge>Verified Seller</Badge>}
-                  <Badge variant="outline">{ad.package_name}</Badge>
-                </div>
-                <CardTitle className="text-3xl">{ad.title}</CardTitle>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                  <span className="flex items-center gap-1">
-                    <Tag className="w-4 h-4" />
-                    {ad.category_name}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {ad.city_name}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    {ad.view_count} views
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Media */}
-                {primaryMedia && (
-                  <div className="mb-6">
-                    <img
-                      src={primaryMedia.normalized_thumbnail_url || primaryMedia.original_url || getPlaceholderImage()}
-                      alt={ad.title}
-                      className="w-full h-96 object-cover rounded-lg"
-                      onError={(e) => {
-                        e.currentTarget.src = getPlaceholderImage();
-                      }}
-                    />
-                  </div>
-                )}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
+          <div className="rounded-[2rem] border border-slate-200 bg-white/85 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-wrap items-center gap-3">
+              {ad.is_featured ? <Badge className="rounded-full bg-orange-500 text-slate-950 hover:bg-orange-500">Featured</Badge> : null}
+              <Badge className="rounded-full bg-slate-950 text-white hover:bg-slate-950">{ad.package_name}</Badge>
+              {ad.is_verified_seller ? (
+                <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  Verified seller
+                </span>
+              ) : null}
+            </div>
 
-                {/* Description */}
-                <div className="prose max-w-none">
-                  <p className="whitespace-pre-wrap">{ad.description}</p>
-                </div>
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950">{ad.title}</h1>
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                {ad.city_name}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Rank {Math.round(Number(ad.rank_score ?? 0))}
+              </span>
+            </div>
 
-                {/* Price */}
-                {ad.price && (
-                  <div className="mt-6 p-4 bg-primary/5 rounded-lg">
-                    <div className="text-sm text-muted-foreground">Price</div>
-                    <div className="text-3xl font-bold text-primary">
-                      Rs {parseFloat(ad.price).toLocaleString('en-PK')}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-100">
+              <Image
+                src={heroMedia?.normalized_thumbnail_url || heroMedia?.original_url || getPlaceholderImage()}
+                alt={ad.title}
+                width={1600}
+                height={900}
+                className="h-[420px] w-full object-cover"
+              />
+            </div>
 
-            {/* Additional Media */}
-            {media && media.length > 1 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>More Images</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
-                    {media.slice(1).map((m: any) => (
-                      <img
-                        key={m.id}
-                        src={m.normalized_thumbnail_url || m.original_url || getPlaceholderImage()}
-                        alt="Additional media"
-                        className="w-full h-32 object-cover rounded-lg"
-                        onError={(e) => {
-                          e.currentTarget.src = getPlaceholderImage();
-                        }}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-sm text-slate-500">Category</p>
+                <p className="mt-2 font-medium text-slate-900">{ad.category_name}</p>
+              </div>
+              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-sm text-slate-500">Seller</p>
+                <p className="mt-2 font-medium text-slate-900">{ad.seller_name || 'Marketplace Seller'}</p>
+              </div>
+              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-sm text-slate-500">Pricing</p>
+                <p className="mt-2 font-medium text-slate-900">{ad.price ? formatCurrency(Number(ad.price)) : 'Contact for price'}</p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Description</p>
+              <p className="mt-4 whitespace-pre-wrap text-base leading-8 text-slate-700">{ad.description}</p>
+            </div>
+
+            {media && media.length > 1 ? (
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {media.slice(1).map((item: any) => (
+                  <Image
+                    key={item.id}
+                    src={item.normalized_thumbnail_url || item.original_url || getPlaceholderImage()}
+                    alt={ad.title}
+                    width={640}
+                    height={320}
+                    className="h-40 w-full rounded-[1.25rem] object-cover"
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {ad.seller_name && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Seller</div>
-                    <div className="font-medium">{ad.seller_name}</div>
-                  </div>
-                )}
-
-                {ad.contact_email && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Email</div>
-                    <a
-                      href={`mailto:${ad.contact_email}`}
-                      className="flex items-center gap-2 text-primary hover:underline"
-                    >
-                      <Mail className="w-4 h-4" />
+            <Card className="rounded-[2rem] border-slate-200 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+              <CardContent className="p-6">
+                <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Contact Seller</p>
+                <div className="mt-5 space-y-4">
+                  {ad.contact_email ? (
+                    <a href={`mailto:${ad.contact_email}`} className="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4 text-slate-900">
+                      <Mail className="h-4 w-4 text-orange-500" />
                       {ad.contact_email}
                     </a>
-                  </div>
-                )}
-
-                {ad.contact_phone && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Phone</div>
-                    <a
-                      href={`tel:${ad.contact_phone}`}
-                      className="flex items-center gap-2 text-primary hover:underline"
-                    >
-                      <Phone className="w-4 h-4" />
+                  ) : null}
+                  {ad.contact_phone ? (
+                    <a href={`tel:${ad.contact_phone}`} className="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4 text-slate-900">
+                      <Phone className="h-4 w-4 text-orange-500" />
                       {ad.contact_phone}
                     </a>
-                  </div>
-                )}
-
-                {ad.website_url && (
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Website</div>
-                    <a
-                      href={ad.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:underline"
-                    >
-                      <Globe className="w-4 h-4" />
-                      Visit Website
+                  ) : null}
+                  {ad.website_url ? (
+                    <a href={ad.website_url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4 text-slate-900">
+                      <Globe className="h-4 w-4 text-orange-500" />
+                      Visit website
                     </a>
-                  </div>
-                )}
-
-                <Button className="w-full" asChild>
-                  <a href={`mailto:${ad.contact_email}`}>Contact Seller</a>
-                </Button>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Ad Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Category</span>
-                  <span className="font-medium">{ad.category_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium">{ad.city_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Package</span>
-                  <span className="font-medium">{ad.package_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Views</span>
-                  <span className="font-medium">{ad.view_count}</span>
+            <Card className="rounded-[2rem] border-slate-200 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+              <CardContent className="p-6">
+                <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Listing Trust</p>
+                <div className="mt-5 space-y-3 text-sm leading-7 text-slate-600">
+                  <p>Only published and non-expired ads appear in the marketplace.</p>
+                  <p>Content has already passed moderation and payment verification.</p>
+                  <p>Package weighting and seller trust affect ranking order.</p>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

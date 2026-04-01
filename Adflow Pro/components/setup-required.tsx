@@ -108,7 +108,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key`}
           </Alert>
 
           <div className="pt-4 border-t">
-            <h4 className="font-semibold mb-2">What You'll Get:</h4>
+            <h4 className="font-semibold mb-2">What You&apos;ll Get:</h4>
             <div className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
               <div>✅ User authentication</div>
               <div>✅ Ad management</div>

@@ -1,52 +1,72 @@
 import { MediaSourceType } from './types';
 
-/**
- * Normalize external media URLs to thumbnails
- */
+const HTTPS_PROTOCOL = 'https:';
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+
+export function getPlaceholderImage(): string {
+  return 'https://placehold.co/1200x800/0f172a/f8fafc?text=AdFlow+Pro';
+}
+
+export function validateMediaUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    const isHttps = parsed.protocol === HTTPS_PROTOCOL;
+    const pathname = parsed.pathname.toLowerCase();
+    const isYoutube = /(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(parsed.hostname.toLowerCase());
+    const isDirectImage = IMAGE_EXTENSIONS.some((extension) => pathname.endsWith(extension));
+
+    return {
+      valid: isHttps && (isYoutube || isDirectImage),
+      protocolValid: isHttps,
+      imageTypeValid: isYoutube || isDirectImage,
+      reason:
+        !isHttps
+          ? 'Only https URLs are allowed'
+          : !isYoutube && !isDirectImage
+            ? 'Only jpg, jpeg, png or YouTube URLs are supported'
+            : null,
+    };
+  } catch {
+    return {
+      valid: false,
+      protocolValid: false,
+      imageTypeValid: false,
+      reason: 'Invalid URL format',
+    };
+  }
+}
+
 export function normalizeMediaUrl(url: string): {
   sourceType: MediaSourceType;
-  normalizedUrl: string;
+  thumbnailUrl: string;
+  fallbackThumbnailUrl: string;
   youtubeId?: string;
 } {
-  // YouTube detection
   const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const youtubeMatch = url.match(youtubeRegex);
-  
+
   if (youtubeMatch) {
     const videoId = youtubeMatch[1];
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     return {
       sourceType: 'youtube',
-      normalizedUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+      thumbnailUrl,
+      fallbackThumbnailUrl: thumbnailUrl,
       youtubeId: videoId,
     };
   }
 
-  // GitHub raw detection
-  if (url.includes('raw.githubusercontent.com') || url.includes('github.com') && url.includes('/raw/')) {
-    return {
-      sourceType: 'github_raw',
-      normalizedUrl: url,
-    };
-  }
-
-  // Direct image
-  if (/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(url)) {
+  if (/\.(jpg|jpeg|png)(\?.*)?$/i.test(url)) {
     return {
       sourceType: 'direct_image',
-      normalizedUrl: url,
+      thumbnailUrl: url,
+      fallbackThumbnailUrl: url,
     };
   }
 
-  // Fallback
   return {
     sourceType: 'other',
-    normalizedUrl: url,
+    thumbnailUrl: getPlaceholderImage(),
+    fallbackThumbnailUrl: getPlaceholderImage(),
   };
-}
-
-/**
- * Get placeholder image URL
- */
-export function getPlaceholderImage(): string {
-  return 'https://placehold.co/600x400/e2e8f0/64748b?text=No+Image';
 }

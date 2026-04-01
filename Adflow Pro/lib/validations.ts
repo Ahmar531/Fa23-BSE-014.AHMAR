@@ -19,11 +19,11 @@ export const RegisterSchema = z.object({
 // AD SCHEMAS
 // ============================================================
 const MEDIA_URL_REGEX =
-  /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$|^https?:\/\/(www\.)?youtube\.com\/.+|^https?:\/\/youtu\.be\/.+|^https?:\/\/raw\.githubusercontent\.com\/.+/i;
+  /^https:\/\/.+\.(jpg|jpeg|png)(\?.*)?$|^https:\/\/(www\.)?youtube\.com\/.+|^https:\/\/youtu\.be\/.+/i;
 
 export const MediaUrlSchema = z.string().regex(
   MEDIA_URL_REGEX,
-  'Must be a valid image URL, GitHub raw URL, or YouTube URL'
+  'Must be an https jpg/png image URL or a YouTube URL'
 );
 
 export const CreateAdSchema = z.object({
