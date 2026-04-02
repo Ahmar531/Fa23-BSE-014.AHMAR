@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { CheckCircle2, Clock3, Eye, ShieldCheck, XCircle } from 'lucide-react';
+export const dynamic = 'force-dynamic';
+
 import { ConsoleShell, LogoutAction } from '@/components/console-shell';
 import { MetricCard } from '@/components/metric-card';
 import { StatusPill } from '@/components/status-pill';

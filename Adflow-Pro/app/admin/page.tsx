@@ -7,6 +7,8 @@ import { getAdminDashboardData } from '@/lib/dashboard';
 import { formatCurrency } from '@/lib/utils';
 import { AdminScheduleForm } from '@/components/admin-schedule-form';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
   const data = await getAdminDashboardData();
 

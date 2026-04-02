@@ -1,4 +1,6 @@
 import { Building2, MapPinned, Package2, Users2 } from 'lucide-react';
+export const dynamic = 'force-dynamic';
+
 import { ConsoleShell, LogoutAction } from '@/components/console-shell';
 import { MetricCard } from '@/components/metric-card';
 import { Card, CardContent } from '@/components/ui/card';
