@@ -3,22 +3,21 @@ import { ArrowRight, BadgeCheck, Building2, Clock3, Globe2, ShieldCheck, Sparkle
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getPublicMarketplaceData } from '@/lib/dashboard';
+import { getSupabasePublicConfigStatus } from '@/lib/supabase/config';
 import { formatCurrency, truncate } from '@/lib/utils';
 
 export default async function HomePage() {
-  const isSupabaseConfigured =
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co';
+  const supabaseConfig = getSupabasePublicConfigStatus();
 
-  if (!isSupabaseConfigured) {
+  if (!supabaseConfig.isConfigured) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-white">
         <div className="max-w-2xl space-y-4 text-center">
           <p className="text-sm uppercase tracking-[0.35em] text-orange-300">Setup Required</p>
           <h1 className="text-4xl font-semibold">Connect Supabase to unlock the full AdFlow Pro marketplace.</h1>
           <p className="text-slate-300">
-            Add your `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and service key in
-            `.env.local`, then refresh the app.
+            {supabaseConfig.reason} Add matching `NEXT_PUBLIC_SUPABASE_URL`,
+            `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and service key values, then refresh the app.
           </p>
         </div>
       </div>

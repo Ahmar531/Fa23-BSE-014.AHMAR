@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getSupabasePublicConfigStatus } from '@/lib/supabase/config';
 import { ROLE_DASHBOARD } from '@/lib/workflow';
 
 export async function middleware(request: NextRequest) {
@@ -10,8 +11,7 @@ export async function middleware(request: NextRequest) {
   });
 
   // Skip middleware if Supabase is not configured
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || 
-      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+  if (!getSupabasePublicConfigStatus().isConfigured) {
     return response;
   }
 

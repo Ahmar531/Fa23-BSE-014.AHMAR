@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
+import { getSupabasePublicConfigStatus } from '@/lib/supabase/config';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  const supabaseConfig = getSupabasePublicConfigStatus();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -21,6 +23,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!supabaseConfig.isConfigured) {
+      toast.error(supabaseConfig.reason ?? 'Supabase auth is not configured correctly.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -60,18 +68,32 @@ export default function LoginPage() {
             <div className="mb-6">
               <Link href="/" className="text-lg font-semibold text-slate-950">AdFlow Pro</Link>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight">Welcome back</h2>
-              <p className="mt-2 text-sm text-slate-600">Enter your credentials to continue.</p>
+              <p className="mt-2 text-sm text-slate-600">
+                {supabaseConfig.isConfigured
+                  ? 'Enter your credentials to continue.'
+                  : 'Supabase auth is not configured correctly for this deployment yet.'}
+              </p>
             </div>
+            {!supabaseConfig.isConfigured ? (
+              <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                {supabaseConfig.reason} Update the Supabase environment variables for this deployment and redeploy.
+              </div>
+            ) : null}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="/auth/forgot-password" className="text-sm font-medium text-orange-600 hover:text-orange-500">
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input id="password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
               </div>
-              <Button type="submit" disabled={loading} className="w-full rounded-full bg-slate-950 py-6 text-base hover:bg-slate-800">
+              <Button type="submit" disabled={loading || !supabaseConfig.isConfigured} className="w-full rounded-full bg-slate-950 py-6 text-base hover:bg-slate-800">
                 {loading ? 'Logging in...' : 'Continue to dashboard'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

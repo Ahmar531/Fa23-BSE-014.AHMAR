@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
+import { getSupabasePublicConfigStatus } from '@/lib/supabase/config';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const supabaseConfig = getSupabasePublicConfigStatus();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -22,6 +24,12 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!supabaseConfig.isConfigured) {
+      toast.error(supabaseConfig.reason ?? 'Supabase auth is not configured correctly.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -56,8 +64,17 @@ export default function RegisterPage() {
             <div className="mb-6">
               <Link href="/" className="text-lg font-semibold text-slate-950">AdFlow Pro</Link>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight">Create your client account</h2>
-              <p className="mt-2 text-sm text-slate-600">Start submitting campaigns into the workflow engine.</p>
+              <p className="mt-2 text-sm text-slate-600">
+                {supabaseConfig.isConfigured
+                  ? 'Start submitting campaigns into the workflow engine.'
+                  : 'Supabase auth is not configured correctly for this deployment yet.'}
+              </p>
             </div>
+            {!supabaseConfig.isConfigured ? (
+              <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                {supabaseConfig.reason} Update the Supabase environment variables for this deployment and redeploy.
+              </div>
+            ) : null}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full name</Label>
@@ -72,7 +89,7 @@ export default function RegisterPage() {
                 <Input id="password" type="password" minLength={8} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
                 <p className="text-xs text-slate-500">At least 8 characters</p>
               </div>
-              <Button type="submit" disabled={loading} className="w-full rounded-full bg-slate-950 py-6 text-base hover:bg-slate-800">
+              <Button type="submit" disabled={loading || !supabaseConfig.isConfigured} className="w-full rounded-full bg-slate-950 py-6 text-base hover:bg-slate-800">
                 {loading ? 'Creating account...' : 'Create account'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

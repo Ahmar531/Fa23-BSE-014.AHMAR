@@ -1,16 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getSupabasePublicConfigStatus } from './config';
 
 /**
  * Creates a Supabase client for SERVER components and API routes.
  * Uses cookie-based auth session management.
  */
 export async function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const config = getSupabasePublicConfigStatus();
+  const supabaseUrl = config.url;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseKey || supabaseUrl === 'https://placeholder.supabase.co') {
-    console.warn('Supabase is not configured. Please add credentials to .env.local');
+  if (!config.isConfigured || !supabaseUrl || !supabaseKey) {
+    console.warn(config.reason ?? 'Supabase is not configured. Please add valid credentials.');
     // Return a chainable mock client
     const mockChain = {
       select: () => mockChain,

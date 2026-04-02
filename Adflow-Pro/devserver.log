@@ -1,0 +1,71 @@
+
+> adflow-pro@1.0.0 dev
+> next dev -p 3001
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.8s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 543ms (124 modules)
+ ○ Compiling /auth/forgot-password ...
+ ✓ Compiled /auth/forgot-password in 6s (677 modules)
+ GET /auth/forgot-password 200 in 6500ms
+ GET /auth/reset-password?code=test123&type=recovery 307 in 6571ms
+ GET /auth/forgot-password 200 in 66ms
+ GET /auth/forgot-password?code=6dfa2ac9-d730-418f-8b02-0612b3550e60 200 in 76ms
+ ✓ Compiled in 1135ms (669 modules)
+ ○ Compiling /auth/reset-password ...
+ ✓ Compiled /auth/reset-password in 1263ms (676 modules)
+ GET /auth/reset-password 200 in 1755ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1251ms (759 modules)
+ GET / 200 in 2745ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 763ms (767 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 644ms (781 modules)
+ ✓ Compiled in 1260ms (777 modules)
+ GET /auth/forgot-password 200 in 355ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 631ms (443 modules)
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 1279ms (471 modules)
+ POST /api/auth/logout 200 in 2787ms
+ GET /auth/login?redirect=%2Fdashboard 200 in 485ms
+ ○ Compiling /dashboard/ads/[id]/edit ...
+ ✓ Compiled /dashboard/ads/[id]/edit in 3.9s (843 modules)
+ ○ Compiling /dashboard/ads/[id] ...
+ ✓ Compiled /dashboard/ads/[id] in 5.4s (1071 modules)
+ ⨯ The requested resource isn't a valid image for https://placehold.co/1200x800/0f172a/f8fafc?text=AdFlow+Pro received null
+ ⨯ The requested resource isn't a valid image for https://placehold.co/1200x800/0f172a/f8fafc?text=AdFlow+Pro received null
+ ○ Compiling /api/client/ads/[id] ...
+ ✓ Compiled /api/client/ads/[id] in 1807ms (801 modules)
+ PATCH /api/client/ads/a57d4ae8-9694-4810-a20f-b60edca38d3f 400 in 4679ms
+ PATCH /api/client/ads/a57d4ae8-9694-4810-a20f-b60edca38d3f 400 in 1218ms
+ PATCH /api/client/ads/a57d4ae8-9694-4810-a20f-b60edca38d3f 400 in 1580ms
+ PATCH /api/client/ads/a57d4ae8-9694-4810-a20f-b60edca38d3f 400 in 1165ms
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 1029ms (714 modules)
+ POST /api/auth/logout 200 in 1840ms
+ ✓ Compiled in 1450ms (1060 modules)
+ GET /auth/login?redirect=%2Fdashboard 200 in 360ms
+ ✓ Compiled in 444ms (686 modules)
+ ✓ Compiled in 1850ms (1065 modules)
+ GET /auth/login?redirect=%2Fdashboard 200 in 228ms
+ ○ Compiling /dashboard/ads/create ...
+ ✓ Compiled /dashboard/ads/create in 1250ms (1057 modules)
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+ ⨯ The requested resource isn't a valid image for https://placehold.co/1200x800/0f172a/f8fafc?text=AdFlow+Pro received null
+ ⨯ The requested resource isn't a valid image for https://placehold.co/1200x800/0f172a/f8fafc?text=AdFlow+Pro received null
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+ GET /dashboard/ads/ef2fb1eb-36ce-4bee-bf1a-810fdb78d11f 200 in 1364ms
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+ GET /dashboard/ads/ef2fb1eb-36ce-4bee-bf1a-810fdb78d11f 200 in 1683ms
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+ ⨯ The requested resource isn't a valid image for https://www.youtube.com/watch?v=ZVQiaRlyikM received null
+[?25h

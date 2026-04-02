@@ -19,13 +19,9 @@ export default async function EditAdPage({ params }: { params: { id: string } })
     redirect('/dashboard');
   }
 
-  // Only the ad owner can edit, and only while it's still a draft.
+  // Allow editing for the ad owner (ignoring draft status lock per user request)
   if (ad.user_id !== user.id) {
     redirect('/dashboard');
-  }
-
-  if (ad.status !== 'draft') {
-    redirect(`/dashboard/ads/${params.id}`);
   }
 
   const [{ data: media }, { data: categories }, { data: cities }, { data: packages }] =
