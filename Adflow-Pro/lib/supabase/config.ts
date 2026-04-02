@@ -75,7 +75,14 @@ export function getSupabasePublicConfigStatus(): SupabasePublicConfigStatus {
     };
   }
 
-  const keyProjectRef = getProjectRefFromJwt(key);
+  // Support both old JWT format and new sb_* format
+  let keyProjectRef = getProjectRefFromJwt(key);
+  
+  // If JWT parsing failed, assume new sb_publishable_* format (project ref is already validated via URL)
+  if (!keyProjectRef && key.startsWith('sb_publishable_')) {
+    keyProjectRef = urlProjectRef;
+  }
+  
   if (!keyProjectRef) {
     return {
       isConfigured: false,
