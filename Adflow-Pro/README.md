@@ -6,7 +6,7 @@ A production-ready sponsored listing marketplace with moderation, payment verifi
 
 ## 🌐 Live Demo
 
-## 🌐 Live Demo
+
 
 🔗 **Visit the Live Project:**
 👉 https://fa23-bse-014-ahmar-l1ti.vercel.app
