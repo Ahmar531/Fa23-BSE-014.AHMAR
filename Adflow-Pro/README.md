@@ -6,9 +6,10 @@ A production-ready sponsored listing marketplace with moderation, payment verifi
 
 🌐 **Visit the Live Project:**  
 👉 https://fa23-bse-014-ahmar-l1ti.vercel.app
+Email:     ahmerjutt52302@gmail.com
 
-ahmerjutt52302@gmail.com
-00000000
+Password:      00000000
+
 
 > Experience the full functionality of the Student Management System in real-time.
 
