@@ -2,13 +2,20 @@
 
 
 A production-ready sponsored listing marketplace with moderation, payment verification, automated scheduling, and analytics.
-## 🚀 Live Demo
 
-🌐 **Visit the Live Project:**  
+
+## 🌐 Live Demo
+
+## 🌐 Live Demo
+
+🔗 **Visit the Live Project:**
 👉 https://fa23-bse-014-ahmar-l1ti.vercel.app
-Email:     ahmerjutt52302@gmail.com
 
-Password:      00000000
+## 🔑 Demo Credentials
+
+* **Email:** ahmerjutt52302@gmail.com
+* **Password:** 00000000
+
 
 
 > Experience the full functionality of the Student Management System in real-time.
