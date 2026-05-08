@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     full_name: '',
   });
 
@@ -30,25 +31,55 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.full_name,
-            role: 'client',
           },
         },
       });
 
       if (error) throw error;
 
-      toast.success('Account created. Check your inbox for verification.');
-      router.push('/auth/login');
+      // Insert into users table with client role
+      if (data.user) {
+        const { error: userError } = await supabase.from('users').upsert({
+          id: data.user.id,
+          email: formData.email,
+          full_name: formData.full_name,
+          role: 'client',
+        }, { onConflict: 'id' });
+
+        if (userError) console.error('User insert error:', userError);
+
+        // Insert into seller_profiles table
+        const { error: profileError } = await supabase.from('seller_profiles').upsert({
+          user_id: data.user.id,
+          business_name: formData.full_name,
+        }, { onConflict: 'user_id' });
+
+        if (profileError) console.error('Seller profile insert error:', profileError);
+      }
+
+      toast.success('Account created successfully! Redirecting to dashboard...');
+      router.push('/dashboard');
+      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to register');
     } finally {
@@ -88,6 +119,10 @@ export default function RegisterPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" minLength={8} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
                 <p className="text-xs text-slate-500">At least 8 characters</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input id="confirmPassword" type="password" minLength={8} value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} required />
               </div>
               <Button type="submit" disabled={loading || !supabaseConfig.isConfigured} className="w-full rounded-full bg-slate-950 py-6 text-base hover:bg-slate-800">
                 {loading ? 'Creating account...' : 'Create account'}

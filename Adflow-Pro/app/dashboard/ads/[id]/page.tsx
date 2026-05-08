@@ -168,7 +168,7 @@ export default async function AdDetailDashboardPage({ params }: { params: { id: 
                   <SubmitForReviewButton adId={ad.id} />
                 ) : null}
                 {ad.status === 'payment_pending' ? (
-                  <PaymentSubmissionForm adId={ad.id} />
+                  <PaymentSubmissionForm adId={ad.id} amount={payment?.amount ? Number(payment.amount) : undefined} />
                 ) : null}
                 {ad.status === 'published' ? (
                   <Link href={`/ads/${ad.slug}`} target="_blank">

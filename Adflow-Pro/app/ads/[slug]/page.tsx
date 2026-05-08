@@ -138,10 +138,19 @@ export default async function AdDetailPage({ params }: { params: { slug: string 
             <Card className="rounded-[2rem] border-slate-200 bg-white/85 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
               <CardContent className="p-6">
                 <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Listing Trust</p>
-                <div className="mt-5 space-y-3 text-sm leading-7 text-slate-600">
-                  <p>Only published and non-expired ads appear in the marketplace.</p>
-                  <p>Content has already passed moderation and payment verification.</p>
-                  <p>Package weighting and seller trust affect ranking order.</p>
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-start gap-3 text-sm leading-7 text-slate-600">
+                    <BadgeCheck className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                    <p>Only published and non-expired ads appear in the marketplace.</p>
+                  </div>
+                  <div className="flex items-start gap-3 text-sm leading-7 text-slate-600">
+                    <BadgeCheck className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                    <p>Content has already passed moderation and payment verification.</p>
+                  </div>
+                  <div className="flex items-start gap-3 text-sm leading-7 text-slate-600">
+                    <BadgeCheck className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                    <p>Package weighting and seller trust affect ranking order.</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

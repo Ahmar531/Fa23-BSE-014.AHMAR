@@ -17,6 +17,7 @@ import { slugify } from '@/lib/utils';
 import { assertTransition } from '@/lib/workflow';
 import { createAuditLog, createNotification, createStatusHistory, recalculateAdRank } from '@/lib/dashboard';
 import type { AdStatus } from '@/lib/types';
+import { getStatusesForModerationView } from '@/lib/moderation';
 
 type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
 
@@ -79,7 +80,6 @@ export async function registerUser(body: unknown) {
     options: {
       data: {
         full_name: input.full_name,
-        role: input.role,
       },
     },
   });
@@ -423,10 +423,10 @@ export async function getClientDashboardApiData() {
   };
 }
 
-export async function getModeratorQueue() {
+export async function getModeratorQueue(status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending') {
   await requireRole(['moderator', 'admin', 'super_admin']);
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('ads')
     .select(`
       *,
@@ -436,8 +436,15 @@ export async function getModeratorQueue() {
       city:cities(*),
       media:ad_media(*)
     `)
-    .in('status', ['submitted', 'under_review'])
+    .eq('is_deleted', false)
     .order('created_at', { ascending: true });
+
+  const statuses = getStatusesForModerationView(status);
+  if (statuses) {
+    query = query.in('status', statuses);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data ?? [];
@@ -448,6 +455,10 @@ export async function reviewModeratorAd(adId: string, body: unknown) {
   const input = ReviewAdSchema.parse({ ...(body as Record<string, unknown>), ad_id: adId });
   const supabase = await createClient();
   const ad = await fetchAd(supabase, adId);
+
+  if (ad.reviewed_at || ['archived', 'payment_pending', 'payment_submitted', 'payment_verified', 'scheduled', 'published'].includes(ad.status)) {
+    throw new Error('This ad has already been reviewed.');
+  }
 
   if (!['submitted', 'under_review'].includes(ad.status)) {
     throw new Error('Ad is not in the moderation queue');
@@ -473,10 +484,18 @@ export async function reviewModeratorAd(adId: string, body: unknown) {
     actorEmail: moderator.email,
     note: input.notes ?? input.rejection_reason ?? null,
     extra: approve
-      ? { moderation_notes: input.notes ?? null }
+      ? {
+          moderation_notes: input.notes ?? null,
+          review_note: input.notes ?? null,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: moderator.id,
+        }
       : {
           moderation_notes: input.notes ?? null,
           rejection_reason: input.rejection_reason ?? 'Rejected during moderation',
+          review_note: input.rejection_reason ?? input.notes ?? 'Rejected during moderation',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: moderator.id,
         },
   });
 

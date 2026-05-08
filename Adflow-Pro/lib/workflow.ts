@@ -1,4 +1,5 @@
 import type { AdStatus, UserRole } from '@/lib/types';
+import { ROLE_HOME } from '@/lib/roles';
 
 export const STATUS_TRANSITIONS: Record<AdStatus, AdStatus[]> = {
   draft: ['submitted', 'archived'],
@@ -13,12 +14,7 @@ export const STATUS_TRANSITIONS: Record<AdStatus, AdStatus[]> = {
   archived: [],
 };
 
-export const ROLE_DASHBOARD: Record<UserRole, string> = {
-  client: '/dashboard',
-  moderator: '/moderator',
-  admin: '/admin',
-  super_admin: '/super-admin',
-};
+export const ROLE_DASHBOARD: Record<UserRole, string> = ROLE_HOME;
 
 export function canTransition(current: AdStatus, next: AdStatus) {
   return STATUS_TRANSITIONS[current]?.includes(next) ?? false;

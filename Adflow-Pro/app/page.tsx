@@ -223,7 +223,69 @@ export default async function HomePage() {
             </div>
           ))}
         </section>
+
+        {/* CTA Section */}
+        <section className="rounded-[2rem] bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-8 py-12 text-center text-white shadow-[0_40px_120px_rgba(15,23,42,0.22)]">
+          <p className="text-xs uppercase tracking-[0.35em] text-orange-300">Ready to launch?</p>
+          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
+            Create your first sponsored listing and reach thousands of buyers.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-slate-300">
+            Sign up in seconds, choose a package, submit your ad, and let the workflow take it live.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/auth/register">
+              <Button className="rounded-full bg-orange-500 px-8 py-6 text-base text-slate-950 hover:bg-orange-400">
+                Get Started Free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/packages">
+              <Button variant="outline" className="rounded-full border-white/20 bg-white/5 px-8 py-6 text-base text-white hover:bg-white/10">
+                View Pricing
+              </Button>
+            </Link>
+          </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200/60 bg-slate-50">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-4">
+            <div>
+              <Link href="/" className="text-xl font-semibold tracking-tight text-slate-950">AdFlow Pro</Link>
+              <p className="mt-3 text-sm leading-7 text-slate-600">The complete sponsored marketplace platform with real approvals and verified payments.</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Platform</p>
+              <div className="mt-4 flex flex-col gap-3">
+                <Link href="/explore" className="text-sm text-slate-600 hover:text-slate-950">Explore Listings</Link>
+                <Link href="/packages" className="text-sm text-slate-600 hover:text-slate-950">Packages & Pricing</Link>
+                <Link href="/faq" className="text-sm text-slate-600 hover:text-slate-950">How It Works</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Account</p>
+              <div className="mt-4 flex flex-col gap-3">
+                <Link href="/auth/login" className="text-sm text-slate-600 hover:text-slate-950">Client Login</Link>
+                <Link href="/auth/register" className="text-sm text-slate-600 hover:text-slate-950">Register</Link>
+                <Link href="/admin/login" className="text-sm text-slate-600 hover:text-slate-950">Staff Portal</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Legal</p>
+              <div className="mt-4 flex flex-col gap-3">
+                <Link href="/terms" className="text-sm text-slate-600 hover:text-slate-950">Terms & Conditions</Link>
+                <Link href="/contact" className="text-sm text-slate-600 hover:text-slate-950">Contact Us</Link>
+              </div>
+            </div>
+          </div>
+          <div className="mt-10 border-t border-slate-200 pt-6 text-center">
+            <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} AdFlow Pro. All rights reserved. Built with Next.js & Supabase.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

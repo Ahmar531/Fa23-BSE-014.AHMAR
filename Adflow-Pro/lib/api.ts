@@ -20,3 +20,12 @@ export function fail(message: string, status = 400, details?: unknown) {
     { status }
   );
 }
+
+export function getErrorStatus(error: unknown, fallback = 400) {
+  if (error instanceof Error) {
+    if (error.message === 'Unauthorized') return 401;
+    if (error.message === 'Forbidden' || error.message === 'Account disabled') return 403;
+  }
+
+  return fallback;
+}

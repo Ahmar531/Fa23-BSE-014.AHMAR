@@ -52,14 +52,15 @@ NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 
 [`vercel.json`](C:/Users/user/Documents/GitHub/Fa23-BSE-014.AHMAR/Adflow%20Pro/vercel.json) already includes:
 
-- `/api/cron/publish-scheduled` -> daily at 01:00 UTC
-- `/api/cron/expire-ads` -> daily at 02:00 UTC
-- `/api/health/db` -> daily at 03:00 UTC
+- `/api/cron/publish-scheduled` -> every hour (0 * * * *)
+- `/api/cron/expire-ads` -> daily at midnight (0 0 * * *)
+- `/api/health/db` -> every 30 minutes (*/30 * * * *)
+- `/api/cron/notify-expiring` -> daily at 8:00 AM (0 8 * * *)
 
 Notes:
 
 - These schedules are Hobby-plan safe. If you need hourly or more frequent cron runs, upgrade the Vercel project to Pro and adjust [`vercel.json`](C:/Users/user/Documents/GitHub/Fa23-BSE-014.AHMAR/Adflow%20Pro/vercel.json).
-- `publish-scheduled` and `expire-ads` now accept Vercel Bearer cron auth via `CRON_SECRET`.
+- All cron jobs now accept Vercel Bearer cron auth via `CRON_SECRET`.
 - Make sure `CRON_SECRET` is present in Vercel before going live.
 
 ## 6. Production Smoke Test
@@ -113,3 +114,19 @@ The app is deployment-ready when all of these are true:
 - Vercel env vars are set
 - One `super_admin` exists
 - Smoke test passes end-to-end
+
+## 11. Deploying Now
+
+Run these commands to deploy immediately:
+
+```bash
+# 1. Make sure you're on the latest code
+git add .
+git commit -m "Production ready - all features complete"
+git push origin main
+
+# 2. If using Vercel CLI
+vercel --prod
+
+# Or connect via Vercel Dashboard at vercel.com
+```

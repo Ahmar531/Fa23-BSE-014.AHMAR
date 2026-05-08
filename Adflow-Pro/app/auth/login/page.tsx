@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 import { getSupabasePublicConfigStatus } from '@/lib/supabase/config';
+import { getRoleHomePath, normalizeRole, PORTAL_DEFINITIONS } from '@/lib/roles';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -33,15 +34,42 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) throw error;
 
+      if (!data.user) {
+        throw new Error('Unable to resolve authenticated user session.');
+      }
+
+      const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
+      const safeRequestedRedirect =
+        requestedRedirect && requestedRedirect.startsWith('/') ? requestedRedirect : null;
+
+      // Resolve role from profiles -> users -> auth metadata fallback.
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      const { data: profileRow, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      const resolvedRole = !profileError
+        ? normalizeRole(profileRow?.role ?? userRow?.role) ?? 'client'
+        : normalizeRole(userRow?.role) ?? 'client';
+
+      const dashboardPath = getRoleHomePath(resolvedRole);
+
       toast.success('Logged in successfully');
-      router.push('/dashboard');
+      router.push(safeRequestedRedirect ?? dashboardPath);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to login');
@@ -87,7 +115,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="/auth/forgot-password" className="text-sm font-medium text-orange-600 hover:text-orange-500">
+              <Link href="/auth/forgot-password" className="text-sm font-medium text-orange-600 hover:text-orange-500">
                     Forgot password?
                   </Link>
                 </div>

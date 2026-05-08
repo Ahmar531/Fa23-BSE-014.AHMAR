@@ -94,20 +94,24 @@ export default async function ExplorePage({
           <>
             <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {ads.map((ad: any) => (
-                <Link key={ad.id} href={`/ads/${ad.slug}`} className="group rounded-[1.75rem] border border-slate-200 bg-white/85 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
-                  <div className="flex items-center justify-between">
-                    <Badge className="rounded-full bg-slate-950 text-white hover:bg-slate-950">{ad.package_name}</Badge>
-                    {ad.is_featured ? <Badge className="rounded-full bg-orange-500 text-slate-950 hover:bg-orange-500">Featured</Badge> : null}
+                <Link key={ad.id} href={`/ads/${ad.slug}`} className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white/85 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:shadow-[0_30px_70px_rgba(15,23,42,0.12)]">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between">
+                      <Badge className="rounded-full bg-slate-950 text-white hover:bg-slate-950">{ad.package_name}</Badge>
+                      {ad.is_featured ? <Badge className="rounded-full bg-orange-500 text-slate-950 hover:bg-orange-500">Featured</Badge> : null}
+                    </div>
+                    <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{ad.title}</h2>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">{truncate(ad.description, 130)}</p>
+                    <div className="mt-5 flex items-center justify-between text-sm text-slate-500">
+                      <span>{ad.category_name}</span>
+                      <span>{ad.city_name}</span>
+                    </div>
                   </div>
-                  <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{ad.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{truncate(ad.description, 130)}</p>
-                  <div className="mt-5 flex items-center justify-between text-sm text-slate-500">
-                    <span>{ad.category_name}</span>
-                    <span>{ad.city_name}</span>
-                  </div>
-                  <div className="mt-5 flex items-center justify-between">
-                    <span className="text-sm text-slate-500">Rank {Math.round(Number(ad.rank_score ?? 0))}</span>
-                    <span className="text-lg font-semibold text-slate-950">{ad.price ? formatCurrency(Number(ad.price)) : 'Contact'}</span>
+                  <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">Rank {Math.round(Number(ad.rank_score ?? 0))}</span>
+                      <span className="text-lg font-semibold text-slate-950">{ad.price ? formatCurrency(Number(ad.price)) : 'Contact'}</span>
+                    </div>
                   </div>
                 </Link>
               ))}
