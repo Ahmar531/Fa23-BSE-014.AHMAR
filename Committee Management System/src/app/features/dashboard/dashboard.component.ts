@@ -35,13 +35,19 @@ import { NotificationService } from '../../core/services/notification.service';
           <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:#34d399;">💰</div>
           <div class="stat-value">PKR {{ formatAmt(stats().totalPaid) }}</div>
           <div class="stat-label">Total Paid</div>
-          <div class="stat-trend">{{ stats().completed }} payments done</div>
+          <div class="stat-trend">{{ stats().installmentsCompleted }} completed installment(s)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(99,102,241,0.15);color:#818cf8;">📆</div>
+          <div class="stat-value">{{ stats().installmentsCompleted }} / {{ stats().installmentSlotsTotal }}</div>
+          <div class="stat-label">Installments progress</div>
+          <div class="stat-trend">{{ stats().installmentsRemaining }} month(s) left · {{ stats().installmentsInProgress }} processing</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24;">📅</div>
-          <div class="stat-value">{{ stats().pending }}</div>
-          <div class="stat-label">Pending Payments</div>
-          <div class="stat-trend">Due this month</div>
+          <div class="stat-value">{{ stats().pending + stats().processing }}</div>
+          <div class="stat-label">Not finalized</div>
+          <div class="stat-trend">{{ stats().pending }} pending · {{ stats().processing }} processing{{ stats().failed ? ' · ' + stats().failed + ' failed' : '' }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background:rgba(99,102,241,0.15);color:#818cf8;">⭐</div>
@@ -132,7 +138,17 @@ export class DashboardComponent implements OnInit {
   loading = signal(true);
   createdCommittees = signal<Committee[]>([]);
   joinedCommittees = signal<Committee[]>([]);
-  stats = signal({ totalPaid: 0, pending: 0, completed: 0 });
+  stats = signal({
+    totalPaid: 0,
+    pending: 0,
+    processing: 0,
+    failed: 0,
+    completed: 0,
+    installmentsCompleted: 0,
+    installmentsRemaining: 0,
+    installmentsInProgress: 0,
+    installmentSlotsTotal: 0
+  });
 
   myCommittees = () => {
     const created = this.createdCommittees();

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { CommitteeService, Committee, CommitteeMember } from '../../../core/services/committee.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { PaymentService, Payment } from '../../../core/services/payment.service';
+import { PaymentService, Payment, MyCommitteeInstallmentSummary } from '../../../core/services/payment.service';
 
 @Component({
   selector: 'app-committee-detail',
@@ -44,6 +44,42 @@ import { PaymentService, Payment } from '../../../core/services/payment.service'
             </div>
           </div>
         </div>
+
+        @if (myInstallment(); as mi) {
+          <div class="glass-card" style="padding:22px;margin-bottom:20px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.06);">
+            <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;">📌 Your installment record</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:14px;">
+              <div>
+                <p style="color:#94a3b8;font-size:11px;margin-bottom:4px;">Paid</p>
+                <p style="font-size:18px;font-weight:800;color:#34d399;">{{ mi.completed_installments }} / {{ mi.duration_months }}</p>
+                <p style="color:#64748b;font-size:10px;">installments</p>
+              </div>
+              <div>
+                <p style="color:#94a3b8;font-size:11px;margin-bottom:4px;">PKR paid (completed)</p>
+                <p style="font-size:16px;font-weight:700;color:#f1f5f9;">PKR {{ mi.amount_paid_completed.toLocaleString() }}</p>
+              </div>
+              <div>
+                <p style="color:#94a3b8;font-size:11px;margin-bottom:4px;">Remaining</p>
+                <p style="font-size:16px;font-weight:700;color:#818cf8;">{{ mi.remaining_installments }} mo (~PKR {{ mi.amount_remaining_estimate.toLocaleString() }})</p>
+              </div>
+              <div>
+                <p style="color:#94a3b8;font-size:11px;margin-bottom:4px;">Committee month / next due</p>
+                <p style="font-size:14px;font-weight:600;color:#e2e8f0;">
+                  Now M{{ mi.committee_current_month }}
+                  @if (mi.next_unpaid_month) { · Pay M{{ mi.next_unpaid_month }} next }
+                  @else { · All installments paid }
+                </p>
+              </div>
+              @if (mi.processing_installments > 0) {
+                <div>
+                  <p style="color:#94a3b8;font-size:11px;margin-bottom:4px;">Processing</p>
+                  <p style="font-size:14px;font-weight:700;color:#a5b4fc;">{{ mi.processing_installments }} payment(s)</p>
+                </div>
+              }
+            </div>
+            <a [routerLink]="['/payments', committee()!.id]" class="btn-primary" style="font-size:13px;padding:10px 18px;">Pay installment</a>
+          </div>
+        }
 
         <!-- Stats -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
@@ -187,6 +223,7 @@ export class CommitteeDetailComponent implements OnInit, OnDestroy {
   members = signal<CommitteeMember[]>([]);
   payments = signal<Payment[]>([]);
   schedule = signal<any[]>([]);
+  myInstallment = signal<MyCommitteeInstallmentSummary | null>(null);
   activeTab = signal('Overview');
   tabs = ['Overview', 'Members', 'Payments', 'Timeline'];
   private ch: any;
@@ -207,11 +244,18 @@ export class CommitteeDetailComponent implements OnInit, OnDestroy {
       this.committeeService.getPayoutSchedule(id),
     ]);
     this.committee.set(c); this.members.set(m); this.payments.set(p); this.schedule.set(s);
+    await this.refreshMyInstallmentSummary(id);
     this.loading.set(false);
     this.ch = this.committeeService.subscribeToCommittee(id, async () => {
       const [nm, np] = await Promise.all([this.committeeService.getMembers(id), this.paymentService.getPaymentsForCommittee(id)]);
       this.members.set(nm); this.payments.set(np);
+      await this.refreshMyInstallmentSummary(id);
     });
+  }
+
+  private async refreshMyInstallmentSummary(committeeId: string) {
+    const rows = await this.paymentService.getMyInstallmentSummaries();
+    this.myInstallment.set(rows.find(r => r.committee_id === committeeId) ?? null);
   }
 
   ngOnDestroy() { if (this.ch) this.committeeService['supabase'].client.removeChannel(this.ch); }
