@@ -108,7 +108,7 @@ Detailed profile management for committee members and admins.
 
 ---
 
-## ⚙️ System Settings
+## ⚙️ Payments
 Advanced settings and customization options for administrators.
 
 <p align="center">
