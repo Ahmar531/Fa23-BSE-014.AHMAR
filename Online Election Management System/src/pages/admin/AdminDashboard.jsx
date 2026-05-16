@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import { runQuery } from '../../lib/electionData'
 import StatCard from '../../components/ui/StatCard'
 import { CardSkeleton } from '../../components/ui/Skeleton'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts'
@@ -35,11 +36,11 @@ const AdminDashboard = () => {
         { count: pendingApprovals },
         { count: totalVotes },
       ] = await Promise.all([
-        supabase.from('elections').select('*', { count: 'exact', head: true }),
-        supabase.from('elections').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        supabase.from('creator_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('votes').select('*', { count: 'exact', head: true }),
+        runQuery(supabase.from('elections').select('*', { count: 'exact', head: true }), 'Loading election count'),
+        runQuery(supabase.from('elections').select('*', { count: 'exact', head: true }).eq('status', 'active'), 'Loading active elections'),
+        runQuery(supabase.from('users').select('*', { count: 'exact', head: true }), 'Loading user count'),
+        runQuery(supabase.from('creator_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'), 'Loading pending approvals'),
+        runQuery(supabase.from('votes').select('*', { count: 'exact', head: true }), 'Loading vote count'),
       ])
       setStats({
         totalElections: totalElections || 0,
@@ -49,7 +50,7 @@ const AdminDashboard = () => {
         totalVotes: totalVotes || 0,
       })
     } catch {
-      setStats({ totalElections: 42, activeElections: 8, totalUsers: 1240, pendingApprovals: 5, totalVotes: 8932 })
+      setStats({ totalElections: 0, activeElections: 0, totalUsers: 0, pendingApprovals: 0, totalVotes: 0 })
     } finally {
       setLoading(false)
     }
@@ -57,14 +58,17 @@ const AdminDashboard = () => {
 
   const fetchActivity = async () => {
     try {
-      const { data } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(8)
-      setRecentActivity(data || mockActivity)
+      const { data } = await runQuery(
+        supabase
+          .from('audit_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(8),
+        'Loading audit logs'
+      )
+      setRecentActivity(data || [])
     } catch {
-      setRecentActivity(mockActivity)
+      setRecentActivity([])
     }
   }
 

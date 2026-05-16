@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { getErrorMessage, runQuery } from '../../lib/electionData'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Users, Search, Shield, ShieldCheck, ShieldAlert, Trash2, RefreshCw } from 'lucide-react'
@@ -41,14 +42,16 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        'Loading users'
+      )
       setUsers(data || [])
-    } catch {
-      toast.error('Failed to load users')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to load users'))
     } finally {
       setLoading(false)
     }
@@ -57,12 +60,14 @@ const AdminUsers = () => {
   const handleRoleChange = async (userId, newRole) => {
     setUpdatingId(userId)
     try {
-      const { error } = await supabase.from('users').update({ role: newRole }).eq('id', userId)
-      if (error) throw error
+      await runQuery(
+        supabase.from('users').update({ role: newRole }).eq('id', userId),
+        'Updating role'
+      )
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
       toast.success('Role updated successfully')
-    } catch {
-      toast.error('Failed to update role')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to update role'))
     } finally {
       setUpdatingId(null)
     }
@@ -71,12 +76,14 @@ const AdminUsers = () => {
   const handleVerify = async (userId, current) => {
     setUpdatingId(userId)
     try {
-      const { error } = await supabase.from('users').update({ verified: !current }).eq('id', userId)
-      if (error) throw error
+      await runQuery(
+        supabase.from('users').update({ verified: !current }).eq('id', userId),
+        'Updating verification'
+      )
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, verified: !current } : u))
       toast.success(`User ${!current ? 'verified' : 'unverified'} successfully`)
-    } catch {
-      toast.error('Failed to update verification')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to update verification'))
     } finally {
       setUpdatingId(null)
     }

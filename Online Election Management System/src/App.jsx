@@ -91,9 +91,9 @@ const router = createBrowserRouter([
     ]
   },
 
-  // Voter Routes
+  // Voter Routes (only for voters)
   {
-    element: <ProtectedRoute roles={['voter', 'election_creator', 'admin']}><DashboardLayout /></ProtectedRoute>,
+    element: <ProtectedRoute roles={['voter']}><DashboardLayout /></ProtectedRoute>,
     children: [
       { path: '/voter', element: <VoterDashboard /> },
       { path: '/voter/elections', element: <VoterElections /> },
@@ -110,9 +110,9 @@ const router = createBrowserRouter([
     element: <ProtectedRoute roles={['admin', 'election_creator', 'voter']}><ProfileRedirect /></ProtectedRoute>
   },
 
-  // Voting Interface
+  // Voting Interface (only for voters)
   {
-    element: <ProtectedRoute roles={['voter', 'election_creator', 'admin']}><Outlet /></ProtectedRoute>,
+    element: <ProtectedRoute roles={['voter']}><Outlet /></ProtectedRoute>,
     children: [
       { path: '/vote/:id', element: <VotingPage /> },
     ]

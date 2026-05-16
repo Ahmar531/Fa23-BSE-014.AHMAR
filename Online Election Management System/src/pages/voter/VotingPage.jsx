@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { getErrorMessage, getRuntimeStatus, runQuery } from '../../lib/electionData'
 import { useAuth } from '../../contexts/AuthContext'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
@@ -27,44 +28,52 @@ const VotingPage = () => {
   const fetchVotingData = async () => {
     try {
       // 1. Fetch Election details
-      const { data: electionData, error: elError } = await supabase
-        .from('elections')
-        .select('*')
-        .eq('id', id)
-        .single()
-      if (elError) throw elError
+      const { data: electionData } = await runQuery(
+        supabase
+          .from('elections')
+          .select('*')
+          .eq('id', id)
+          .single(),
+        'Loading election'
+      )
 
-      if (electionData.status !== 'active' && new Date(electionData.start_at) <= new Date() && new Date(electionData.end_at) > new Date()) {
-         electionData.status = 'active'
-      }
+      const runtimeStatus = getRuntimeStatus(electionData)
+      electionData.status = runtimeStatus
 
       setElection(electionData)
 
-      if (electionData.status !== 'active') {
+      if (runtimeStatus !== 'active') {
          toast.error('This election is not currently active.')
          navigate(`/elections/${id}`)
          return
       }
 
       // 2. Fetch Polls and Candidates
-      const { data: pollData, error: pollError } = await supabase
-        .from('polls')
-        .select('*, candidates(*)')
-        .eq('election_id', id)
-      if (pollError) throw pollError
+      const { data: pollData } = await runQuery(
+        supabase
+          .from('polls')
+          .select('*, candidates(*)')
+          .eq('election_id', id),
+        'Loading ballots'
+      )
       setPolls(pollData || [])
 
       // 3. Verify Registration
       if (user) {
-         const { data: reg } = await supabase
-           .from('voter_registrations')
-           .select('status')
-           .eq('poll_id', pollData[0]?.id)
-           .eq('user_id', user.id)
-           .single()
+         const pollIds = (pollData || []).map(poll => poll.id)
+         const { data: regs } = await runQuery(
+           supabase
+             .from('voter_registrations')
+             .select('status')
+             .eq('user_id', user.id)
+             .in('poll_id', pollIds),
+           'Checking voter registration'
+         )
          
-         if (!reg || reg.status === 'voted') {
-            toast.error(reg?.status === 'voted' ? 'You have already voted in this election.' : 'You are not registered for this election.')
+         const hasRegistration = regs?.some(reg => reg.status === 'registered')
+         const hasVoted = regs?.some(reg => reg.status === 'voted')
+         if (!hasRegistration || hasVoted) {
+            toast.error(hasVoted ? 'You have already voted in this election.' : 'You are not registered for this election.')
             navigate(`/elections/${id}`)
          }
       }
@@ -95,41 +104,82 @@ const VotingPage = () => {
     
     setSubmitting(true)
     try {
-       // In a real production app, this would call an Edge Function to verify the secret ID securely
-       // and perform the vote insertion and status update transactionally.
-       // Here we simulate the logic.
-       
-       // 1. Verify Secret ID (Simulated check, normally we check hashed_secret)
-       const { data: secretData } = await supabase
-          .from('secret_ids')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-          
-       // For demo purposes, we will accept any secret if secret generation isn't strictly enforced yet
-       // 2. Cast Votes
-       const voteInserts = Object.entries(selections).map(([pollId, candidateId]) => ({
+       const choices = Object.entries(selections).map(([pollId, candidateId]) => ({
           poll_id: pollId,
           candidate_id: candidateId
        }))
-       
-       const { error: voteError } = await supabase.from('votes').insert(voteInserts)
-       if (voteError) throw voteError
 
-       // 3. Update Registration Status
-       const pollIds = polls.map(p => p.id)
-       await supabase.from('voter_registrations')
-          .update({ status: 'voted' })
-          .in('poll_id', pollIds)
-          .eq('user_id', user.id)
+       try {
+          await runQuery(
+             supabase.rpc('cast_vote', {
+                p_election_id: id,
+                p_secret_code: secretId.toUpperCase().trim(),
+                p_choices: choices,
+             }),
+             'Casting vote'
+          )
+       } catch (rpcError) {
+          const missingRpc = rpcError.message?.includes('cast_vote') || rpcError.code === 'PGRST202'
+          if (!missingRpc) throw rpcError
+          await submitVoteDirectly(choices)
+       }
 
        setStep(3)
        toast.success('Your vote has been cast securely!')
     } catch (error) {
-       toast.error(error.message || 'Failed to submit vote. Invalid Secret ID or network error.')
+       toast.error(getErrorMessage(error, 'Failed to submit vote. Invalid Secret ID or network error.'))
     } finally {
        setSubmitting(false)
     }
+  }
+
+  const submitVoteDirectly = async (choices) => {
+       // Fallback for local databases where the cast_vote RPC has not been deployed yet.
+       const { data: secretData } = await runQuery(
+         supabase
+          .from('secret_ids')
+          .select('id, poll_id')
+          .eq('user_id', user.id)
+          .eq('hashed_secret', secretId.toUpperCase().trim())
+          .single(),
+         'Verifying secret ID'
+       )
+       
+       // 2. Verify the secret belongs to one of the polls in this election
+       const pollIds = polls.map(p => p.id)
+       if (!pollIds.includes(secretData.poll_id)) {
+          throw new Error('This Secret ID is not valid for this election.')
+       }
+       
+       // 3. Check if already voted
+       const { data: regCheck } = await runQuery(
+        supabase
+          .from('voter_registrations')
+          .select('status')
+          .eq('poll_id', secretData.poll_id)
+          .eq('user_id', user.id)
+          .single(),
+        'Checking vote status'
+       )
+          
+       if (regCheck?.status === 'voted') {
+          throw new Error('You have already voted in this election.')
+       }
+       
+       // 4. Cast Votes (Anonymous - no user_id stored)
+       await runQuery(
+        supabase.from('votes').insert(choices),
+        'Saving vote'
+       )
+
+       // 5. Update Registration Status to 'voted'
+       await runQuery(
+        supabase.from('voter_registrations')
+          .update({ status: 'voted' })
+          .in('poll_id', pollIds)
+          .eq('user_id', user.id),
+        'Updating vote status'
+       )
   }
 
   if (loading) return (
@@ -164,27 +214,33 @@ const VotingPage = () => {
                         {poll.description && <p className="text-sm text-slate-500 mt-1">{poll.description}</p>}
                      </div>
 
-                     <div className="space-y-3">
-                        {poll.candidates?.length > 0 ? poll.candidates.map(candidate => (
-                           <label 
+                     <div className="space-y-3" role="radiogroup" aria-label={poll.title}>
+                        {poll.candidates?.length > 0 ? poll.candidates.map(candidate => {
+                           const selected = selections[poll.id] === candidate.id
+                           return (
+                           <button
                               key={candidate.id}
-                              className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                 selections[poll.id] === candidate.id 
+                              type="button"
+                              role="radio"
+                              aria-checked={selected}
+                              onClick={() => handleSelection(poll.id, candidate.id)}
+                              className={`flex items-center w-full text-left p-4 rounded-xl border-2 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                                 selected 
                                  ? 'border-primary-500 bg-primary-50 shadow-sm' 
                                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                               }`}
                            >
                               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-colors ${
-                                 selections[poll.id] === candidate.id ? 'border-primary-500 bg-primary-500' : 'border-slate-300'
+                                 selected ? 'border-primary-500 bg-primary-500' : 'border-slate-300'
                               }`}>
-                                 {selections[poll.id] === candidate.id && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                                 {selected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                               </div>
                               <div>
-                                 <p className={`font-bold ${selections[poll.id] === candidate.id ? 'text-primary-900' : 'text-slate-800'}`}>{candidate.name}</p>
+                                 <p className={`font-bold ${selected ? 'text-primary-900' : 'text-slate-800'}`}>{candidate.name}</p>
                                  {candidate.designation && <p className="text-sm text-slate-500">{candidate.designation}</p>}
                               </div>
-                           </label>
-                        )) : (
+                           </button>
+                        )}) : (
                            <p className="text-slate-500 italic text-center py-4 border rounded-xl bg-slate-50">No candidates available for this ballot.</p>
                         )}
                      </div>

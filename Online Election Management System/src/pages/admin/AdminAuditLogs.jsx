@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
 import { Activity, Search, Filter } from 'lucide-react'
 import { format } from 'date-fns'
+import toast from 'react-hot-toast'
 
 const actionColors = {
   login: 'bg-blue-100 text-blue-700',
@@ -65,6 +66,36 @@ const AdminAuditLogs = () => {
           <Activity className="w-6 h-6 text-primary-600" /> Audit Logs
         </h1>
         <p className="text-slate-500 text-sm mt-1">Complete history of all actions taken on the platform</p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => {
+            if (filtered.length === 0) return toast.error('No logs to export')
+            const csv = [
+              ['Action', 'Actor Name', 'Actor Email', 'Details', 'Timestamp'],
+              ...filtered.map(log => [
+                log.action,
+                log.users?.name || 'System',
+                log.users?.email || '',
+                `"${log.details_json?.message || ''}"`,
+                log.created_at ? format(new Date(log.created_at), 'MMM d, yyyy h:mm a') : ''
+              ])
+            ].map(row => row.join(',')).join('\n')
+            const blob = new Blob([csv], { type: 'text/csv' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `audit_logs_${format(new Date(), 'yyyy-MM-dd')}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+            toast.success('Audit logs exported successfully')
+          }}
+          className="btn-primary py-2 px-4 text-sm"
+        >
+          Export CSV
+        </button>
       </div>
 
       {/* Filters */}

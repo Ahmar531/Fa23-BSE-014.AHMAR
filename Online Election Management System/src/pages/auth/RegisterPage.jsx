@@ -1,23 +1,24 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../contexts/AuthContext'
+import { getErrorMessage } from '../../lib/electionData'
 import { Eye, EyeOff, Vote, Lock, Mail, User, Phone, AlertCircle, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const roles = [
   { value: 'voter',            label: 'Voter',            desc: 'Participate in elections' },
-  { value: 'election_creator', label: 'Election Creator', desc: 'Create & manage elections (requires approval)' },
+  { value: 'election_creator', label: 'Election Creator', desc: 'Create & manage elections' },
 ]
 
 const RegisterPage = () => {
   const { signUp } = useAuth()
-  const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '', role: 'voter' })
   const [errors, setErrors] = useState({})
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [submittedRole, setSubmittedRole] = useState('voter')
 
   const validate = () => {
     const e = {}
@@ -51,11 +52,13 @@ const RegisterPage = () => {
     if (Object.keys(errs).length) { setErrors(errs); return }
     setLoading(true)
     try {
-      await signUp({ email: form.email, password: form.password, name: form.name, phone: form.phone })
+      await signUp({ email: form.email, password: form.password, name: form.name, phone: form.phone, role: form.role })
+      setSubmittedRole(form.role)
       setSuccess(true)
     } catch (err) {
-      toast.error(err.message || 'Registration failed')
-      setErrors({ form: err.message })
+      const message = getErrorMessage(err, 'Registration failed')
+      toast.error(message)
+      setErrors({ form: message })
     } finally {
       setLoading(false)
     }
@@ -66,20 +69,25 @@ const RegisterPage = () => {
     setErrors(p => ({ ...p, [e.target.name]: '', form: '' }))
   }
 
-  if (success) return (
+  if (success) {
+    const isCreatorRequest = submittedRole === 'election_creator'
+    return (
     <div className="auth-bg min-h-screen flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="auth-card p-10 w-full max-w-md text-center">
         <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
           <CheckCircle className="w-10 h-10 text-green-500" />
         </div>
-        <h2 className="font-display text-2xl font-bold text-slate-800 mb-2">Check Your Email!</h2>
+        <h2 className="font-display text-2xl font-bold text-slate-800 mb-2">
+          Check Your Email!
+        </h2>
         <p className="text-slate-500 text-sm mb-6">
           We've sent a verification link to <strong>{form.email}</strong>. Please verify your email to continue.
         </p>
         <Link to="/login" className="btn-primary inline-flex">Back to Login</Link>
       </motion.div>
     </div>
-  )
+    )
+  }
 
   return (
     <div className="auth-bg min-h-screen flex items-center justify-center p-4 py-12 relative">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { getRuntimeStatus, runQuery } from '../../lib/electionData'
 import { useAuth } from '../../contexts/AuthContext'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -22,20 +23,16 @@ const CreatorElections = () => {
   const fetchElections = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('elections')
-        .select('*, polls(id)')
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('elections')
+          .select('*, polls(id)')
+          .eq('creator_id', user.id)
+          .order('created_at', { ascending: false }),
+        'Loading creator elections'
+      )
       const enriched = (data || []).map(el => {
-        let status = el.status
-        const now = new Date()
-        if (status !== 'draft') {
-          if (el.end_at && new Date(el.end_at) < now) status = 'completed'
-          else if (el.start_at && new Date(el.start_at) <= now) status = 'active'
-          else status = 'upcoming'
-        }
+        const status = getRuntimeStatus(el)
         return { ...el, status }
       })
       setElections(enriched)
@@ -49,8 +46,10 @@ const CreatorElections = () => {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this election?')) return
     try {
-      const { error } = await supabase.from('elections').delete().eq('id', id)
-      if (error) throw error
+      await runQuery(
+        supabase.from('elections').delete().eq('id', id),
+        'Deleting election'
+      )
       setElections(prev => prev.filter(e => e.id !== id))
       toast.success('Election deleted')
     } catch {

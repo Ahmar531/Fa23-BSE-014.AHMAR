@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { supabase } from '../../lib/supabase'
+import { fetchVisibleElections, getErrorMessage } from '../../lib/electionData'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import ElectionCard from '../../components/elections/ElectionCard'
@@ -16,6 +16,7 @@ const ElectionsList = () => {
   const [filter, setFilter] = useState('All')
   const [category, setCategory] = useState('All')
   const [search, setSearch] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchElections()
@@ -23,28 +24,13 @@ const ElectionsList = () => {
 
   const fetchElections = async () => {
     setLoading(true)
+    setError('')
     try {
-      // For public list, usually only published ones (not draft unless authorized, assuming public here)
-      const { data, error } = await supabase
-        .from('elections')
-        .select(`*, polls(id, votes:votes(count))`)
-        .neq('status', 'draft') // Or 'published'
-        .order('start_at', { ascending: false })
-        
-      if (error) throw error
-
-      const enriched = (data || []).map(el => {
-        let status = 'upcoming'
-        const now = new Date()
-        if (el.end_at && new Date(el.end_at) < now) status = 'completed'
-        else if (el.start_at && new Date(el.start_at) <= now) status = 'active'
-        
-        const voteCount = el.polls?.reduce((sum, p) => sum + (p.votes?.[0]?.count || 0), 0) || 0
-        return { ...el, status, vote_count: voteCount }
-      })
-      setElections(enriched)
-    } catch {
-      setElections(mockElections)
+      setElections(await fetchVisibleElections({ orderBy: 'start_at' }))
+    } catch (error) {
+      console.error('Failed to fetch elections:', error)
+      setError(getErrorMessage(error, 'Failed to load elections.'))
+      setElections([])
     } finally {
       setLoading(false)
     }
@@ -112,6 +98,12 @@ const ElectionsList = () => {
            </h2>
         </div>
 
+        {error && !loading && (
+          <div className="mb-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,36 +134,5 @@ const ElectionsList = () => {
     </div>
   )
 }
-
-const mockElections = [
-  {
-    id: '1', title: 'Student Council Election 2025', category: 'Student Council',
-    description: 'Annual election for student council representatives across all departments.',
-    status: 'active', start_at: new Date(Date.now() - 86400000).toISOString(),
-    end_at: new Date(Date.now() + 86400000 * 2).toISOString(),
-    max_voters: 500, vote_count: 312,
-  },
-  {
-    id: '2', title: 'Community Board Election', category: 'Community',
-    description: 'Elect your neighborhood community board members.',
-    status: 'upcoming', start_at: new Date(Date.now() + 86400000 * 3).toISOString(),
-    end_at: new Date(Date.now() + 86400000 * 7).toISOString(),
-    max_voters: 200, vote_count: 0,
-  },
-  {
-    id: '3', title: 'Corporate Leadership Vote', category: 'Corporate',
-    description: 'Annual shareholder vote for board of directors.',
-    status: 'completed', start_at: new Date(Date.now() - 86400000 * 10).toISOString(),
-    end_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-    max_voters: 1000, vote_count: 873,
-  },
-  {
-    id: '4', title: 'Engineering Dept Representative', category: 'Student Council',
-    description: 'Vote for the head of the engineering student body.',
-    status: 'active', start_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-    end_at: new Date(Date.now() + 86400000 * 1).toISOString(),
-    max_voters: 300, vote_count: 145,
-  },
-]
 
 export default ElectionsList

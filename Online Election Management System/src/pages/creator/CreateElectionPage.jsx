@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { getErrorMessage, runQuery } from '../../lib/electionData'
 import { useAuth } from '../../contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { Vote, ArrowLeft, Calendar, Users, Settings } from 'lucide-react'
@@ -31,6 +32,14 @@ const CreateElectionPage = () => {
     setLoading(true)
     
     try {
+      if (!form.start_at || !form.end_at) throw new Error('Start and end date are required.')
+      if (new Date(form.end_at) <= new Date(form.start_at)) {
+        throw new Error('End date must be after start date.')
+      }
+      if (form.deadline && new Date(form.deadline) >= new Date(form.start_at)) {
+        throw new Error('Registration deadline must be before the election starts.')
+      }
+
       const electionData = {
         ...form,
         creator_id: user.id,
@@ -39,27 +48,31 @@ const CreateElectionPage = () => {
         deadline: form.deadline || null
       }
       
-      const { data, error } = await supabase
-        .from('elections')
-        .insert([electionData])
-        .select()
-        .single()
-
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('elections')
+          .insert([electionData])
+          .select()
+          .single(),
+        'Creating election'
+      )
       
       // Auto-create a default poll for this election
       if (data) {
-        await supabase.from('polls').insert([{
-           election_id: data.id,
-           title: 'Main Poll',
-           description: 'Default poll for this election'
-        }])
+        await runQuery(
+          supabase.from('polls').insert([{
+             election_id: data.id,
+             title: 'Main Poll',
+             description: 'Default poll for this election'
+          }]),
+          'Creating default ballot'
+        )
       }
 
       toast.success(publish ? 'Election published successfully!' : 'Draft saved successfully!')
       navigate(isAdmin ? '/admin/elections' : '/creator')
     } catch (error) {
-      toast.error(error.message || 'Failed to create election')
+      toast.error(getErrorMessage(error, 'Failed to create election'))
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { getErrorMessage, runQuery } from '../../lib/electionData'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -25,16 +26,18 @@ const CreatorVoters = () => {
   const fetchElections = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('elections')
-        .select('id, title, status')
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('elections')
+          .select('id, title, status')
+          .eq('creator_id', user.id)
+          .order('created_at', { ascending: false }),
+        'Loading creator elections'
+      )
       setElections(data || [])
       if (data?.length > 0) fetchRegistrations(data[0].id)
-    } catch {
-      toast.error('Failed to load elections')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to load elections'))
     } finally {
       setLoading(false)
     }
@@ -44,39 +47,69 @@ const CreatorVoters = () => {
     setSelected(electionId)
     setLoadingRegs(true)
     try {
-      const { data: polls } = await supabase
-        .from('polls')
-        .select('id')
-        .eq('election_id', electionId)
+      const { data: polls } = await runQuery(
+        supabase
+          .from('polls')
+          .select('id')
+          .eq('election_id', electionId),
+        'Loading election ballots'
+      )
 
       if (!polls?.length) { setRegistrations([]); return }
 
       const pollIds = polls.map(p => p.id)
-      const { data, error } = await supabase
-        .from('voter_registrations')
-        .select('*, users:user_id(name, email)')
-        .in('poll_id', pollIds)
-        .order('registered_at', { ascending: false })
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('voter_registrations')
+          .select('*, users:user_id(name, email)')
+          .in('poll_id', pollIds)
+          .order('registered_at', { ascending: false }),
+        'Loading voter list'
+      )
       setRegistrations(data || [])
-    } catch {
-      toast.error('Failed to load voter list')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to load voter list'))
     } finally {
       setLoadingRegs(false)
     }
   }
 
   const handleStatusChange = async (id, newStatus) => {
+    let reason = ''
+    if (newStatus === 'rejected') {
+       reason = window.prompt("Please provide a mandatory reason for this override:")
+       if (!reason) {
+          toast.error("A reason is mandatory to reject a voter.")
+          return
+       }
+    }
+    
     try {
-      const { error } = await supabase
-        .from('voter_registrations')
-        .update({ status: newStatus })
-        .eq('id', id)
-      if (error) throw error
+      await runQuery(
+        supabase
+          .from('voter_registrations')
+          .update({ status: newStatus })
+          .eq('id', id),
+        'Updating voter status'
+      )
+      
+      // Optionally log to audit_logs
+      if (reason) {
+         await runQuery(
+           supabase.from('audit_logs').insert({
+              action: 'voter_override',
+              actor_id: user.id,
+              target_id: id,
+              details_json: { status: newStatus, reason: reason }
+           }),
+           'Creating audit log'
+         )
+      }
+      
       setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r))
       toast.success('Voter status updated')
-    } catch {
-      toast.error('Failed to update status')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to update status'))
     }
   }
 
@@ -131,14 +164,42 @@ const CreatorVoters = () => {
             ))}
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['registered', 'voted', 'waitlisted', 'rejected'].map(s => (
-              <div key={s} className="card p-4">
-                <p className="text-xl font-bold text-slate-800">{registrations.filter(r => r.status === s).length}</p>
-                <p className={`text-xs font-semibold mt-1 capitalize px-2 py-0.5 inline-block rounded-full ${statusColors[s]}`}>{s}</p>
-              </div>
-            ))}
+          {/* Stats & Actions */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 w-full">
+              {['registered', 'voted', 'waitlisted', 'rejected'].map(s => (
+                <div key={s} className="card p-4">
+                  <p className="text-xl font-bold text-slate-800">{registrations.filter(r => r.status === s).length}</p>
+                  <p className={`text-xs font-semibold mt-1 capitalize px-2 py-0.5 inline-block rounded-full ${statusColors[s]}`}>{s}</p>
+                </div>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => {
+                if (registrations.length === 0) return toast.error('No voters to export')
+                const csv = [
+                  ['Name', 'Email', 'Status', 'Registered At'],
+                  ...registrations.map(reg => [
+                    `"${reg.users?.name || ''}"`,
+                    `"${reg.users?.email || ''}"`,
+                    reg.status,
+                    reg.registered_at ? new Date(reg.registered_at).toLocaleString() : ''
+                  ])
+                ].map(row => row.join(',')).join('\n')
+                const blob = new Blob([csv], { type: 'text/csv' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `voter_list_${selected}.csv`
+                a.click()
+                URL.revokeObjectURL(url)
+                toast.success('Voter list exported successfully')
+              }}
+              className="btn-primary py-3 px-6 whitespace-nowrap"
+            >
+              Generate Final Voter List (CSV)
+            </button>
           </div>
 
           {/* Filters */}

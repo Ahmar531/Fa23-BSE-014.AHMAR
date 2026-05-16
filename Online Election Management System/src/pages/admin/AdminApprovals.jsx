@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { getErrorMessage, runQuery } from '../../lib/electionData'
 import toast from 'react-hot-toast'
 import { CheckCircle, XCircle, Clock, ShieldAlert } from 'lucide-react'
 
@@ -13,45 +14,71 @@ const AdminApprovals = () => {
 
   const fetchRequests = async () => {
     try {
-      const { data, error } = await supabase
-        .from('creator_requests')
-        .select(`
-          *,
-          users:user_id (name, email)
-        `)
-        .order('created_at', { ascending: false })
-        
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('creator_requests')
+          .select(`
+            *,
+            users:user_id (name, email)
+          `)
+          .order('created_at', { ascending: false }),
+        'Loading creator requests'
+      )
       setRequests(data || [])
-    } catch (err) {
-      toast.error('Failed to load requests')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to load requests'))
     } finally {
       setLoading(false)
     }
   }
 
   const handleAction = async (id, status, userId) => {
+    let rejectionReason = null
+    if (status === 'rejected') {
+       rejectionReason = window.prompt("Please provide a reason for rejection:")
+       if (!rejectionReason) {
+          toast.error("Rejection reason is required.")
+          return
+       }
+    }
+
     try {
       // Update request status
-      const { error: reqError } = await supabase
-        .from('creator_requests')
-        .update({ status })
-        .eq('id', id)
-      if (reqError) throw reqError
+      await runQuery(
+        supabase
+          .from('creator_requests')
+          .update({ status, rejection_reason: rejectionReason })
+          .eq('id', id),
+        'Updating creator request'
+      )
 
       // If approved, update user role to 'election_creator'
       if (status === 'approved') {
-         const { error: userError } = await supabase
-            .from('users')
-            .update({ role: 'election_creator' })
-            .eq('id', userId)
-         if (userError) throw userError
+         await runQuery(
+           supabase
+              .from('users')
+              .update({ role: 'election_creator', verified: true })
+              .eq('id', userId),
+           'Approving creator role'
+         )
       }
+
+      // Send notification
+      await runQuery(
+        supabase.from('notifications').insert({
+           user_id: userId,
+           type: 'approval_status',
+           message: status === 'approved' 
+              ? 'Your request to become an Election Creator has been approved!' 
+              : `Your request to become an Election Creator was rejected. Reason: ${rejectionReason}`
+        }),
+        'Creating notification'
+      )
 
       toast.success(`Request ${status} successfully`)
       fetchRequests()
-    } catch (err) {
-      toast.error('Failed to process action')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to process action'))
     }
   }
 

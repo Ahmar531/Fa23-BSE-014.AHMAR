@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import { getErrorMessage, getRuntimeStatus, runQuery } from '../../lib/electionData'
 import { useAuth } from '../../contexts/AuthContext'
 import StatCard from '../../components/ui/StatCard'
 import { CardSkeleton } from '../../components/ui/Skeleton'
@@ -14,83 +15,99 @@ const VoterDashboard = () => {
   const [registeredPolls, setRegisteredPolls] = useState([])
   const [secretIds, setSecretIds] = useState({})
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    if (user) {
-      fetchStats()
-      fetchRegisteredPolls()
+    const loadData = async () => {
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      
+      try {
+        setError('')
+        await Promise.all([fetchStats(), fetchRegisteredPolls()])
+      } catch (error) {
+        console.error('Data load error:', error)
+        setError(getErrorMessage(error, 'Dashboard data could not be loaded.'))
+      } finally {
+        setLoading(false)
+      }
     }
+    
+    loadData()
   }, [user])
 
   const fetchStats = async () => {
     try {
-      const [
-        { count: registeredCount },
-        { count: votedCount },
-        { data: secretsData }
-      ] = await Promise.all([
-        supabase.from('voter_registrations').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('voter_registrations').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'voted'), 
-        supabase.from('secret_ids').select('poll_id, masked_secret').eq('user_id', user.id)
+      const [registeredResult, votedResult, secretsResult] = await Promise.allSettled([
+        runQuery(supabase.from('voter_registrations').select('*', { count: 'exact', head: true }).eq('user_id', user.id), 'Loading registered polls'),
+        runQuery(supabase.from('voter_registrations').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'voted'), 'Loading votes cast'),
+        runQuery(supabase.from('secret_ids').select('poll_id, hashed_secret, masked_secret').eq('user_id', user.id), 'Loading secret IDs')
       ])
       
       setStats({
-        registeredPolls: registeredCount || 0,
-        votesCast: votedCount || 0,
+        registeredPolls: registeredResult.status === 'fulfilled' ? registeredResult.value.count || 0 : 0,
+        votesCast: votedResult.status === 'fulfilled' ? votedResult.value.count || 0 : 0,
       })
 
-      if (secretsData) {
+      if (secretsResult.status === 'fulfilled') {
         const secretsMap = {}
-        secretsData.forEach(s => secretsMap[s.poll_id] = s.masked_secret)
+        ;(secretsResult.value.data || []).forEach(secret => {
+          secretsMap[secret.poll_id] = secret.hashed_secret || secret.masked_secret
+        })
         setSecretIds(secretsMap)
       }
-    } catch {
-      setStats({ registeredPolls: 3, votesCast: 1 })
-    } finally {
-      setLoading(false)
+    } catch (error) {
+      console.error('Stats fetch error:', error)
+      setStats({ registeredPolls: 0, votesCast: 0 })
     }
   }
 
   const fetchRegisteredPolls = async () => {
     try {
       // Fetch registrations
-      const { data: regs } = await supabase
-        .from('voter_registrations')
-        .select('poll_id, status')
-        .eq('user_id', user.id)
+      const { data: regs } = await runQuery(
+        supabase
+          .from('voter_registrations')
+          .select('poll_id, status')
+          .eq('user_id', user.id),
+        'Loading your registrations'
+      )
 
       if (regs?.length > 0) {
         const pollIds = regs.map(r => r.poll_id)
         
         // Fetch corresponding elections
-        const { data: polls } = await supabase
-          .from('polls')
-          .select('id, election_id, elections(*)')
-          .in('id', pollIds)
+        const { data: polls } = await runQuery(
+          supabase
+            .from('polls')
+            .select('id, election_id, elections(*)')
+            .in('id', pollIds),
+          'Loading registered elections'
+        )
           
         if (polls) {
            const elections = polls.map(p => {
                const el = p.elections
-               let status = el.status
-               const now = new Date()
-               if (status !== 'draft') {
-                   if (el.end_at && new Date(el.end_at) < now) status = 'completed'
-                   else if (el.start_at && new Date(el.start_at) <= now) status = 'active'
-                   else status = 'upcoming'
-               }
+               if (!el) return null
+               const status = getRuntimeStatus(el)
                // Add registration status specific to this user
                const reg = regs.find(r => r.poll_id === p.id)
-               return { ...el, status, voter_status: reg?.status || 'registered', poll_id: p.id }
-           })
+               return { ...el, db_status: el.status, status, voter_status: reg?.status || 'registered', poll_id: p.id }
+           }).filter(Boolean)
            // Deduplicate if multiple polls per election (simplified for now)
            const uniqueElections = Array.from(new Map(elections.map(item => [item['id'], item])).values());
            setRegisteredPolls(uniqueElections)
            return
         }
       }
-      setRegisteredPolls(mockRegistered)
-    } catch {
-      setRegisteredPolls(mockRegistered)
+      
+      // No registrations found
+      setRegisteredPolls([])
+    } catch (error) {
+      console.error('Polls fetch error:', error)
+      setRegisteredPolls([])
     }
   }
 
@@ -106,6 +123,12 @@ const VoterDashboard = () => {
           <Search className="w-4 h-4" /> Find Elections
         </Link>
       </div>
+
+      {error && !loading && (
+        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -166,7 +189,7 @@ const VoterDashboard = () => {
             </div>
             <div className="flex-1">
                <h3 className="font-semibold text-lg">Your Secret Voter IDs</h3>
-               <p className="text-slate-300 text-sm max-w-2xl mb-3">These cryptographic keys separate your identity from your vote, ensuring complete anonymity.</p>
+               <p className="text-slate-300 text-sm max-w-2xl mb-3">Keep these IDs private. You will need the full ID when casting your vote.</p>
                
                <div className="flex flex-wrap gap-3">
                   {Object.entries(secretIds).length > 0 ? (

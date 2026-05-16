@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../contexts/AuthContext'
 import { Vote, Menu, X, ChevronDown, User, LogOut, LayoutDashboard } from 'lucide-react'
 
 const Navbar = () => {
   const { user, profile, signOut } = useAuth()
+  const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [dropOpen, setDropOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -17,7 +19,24 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => { setMenuOpen(false) }, [location])
+  useEffect(() => { 
+    setMenuOpen(false)
+    setDropOpen(false)
+  }, [location])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropOpen(false)
+      }
+    }
+    
+    if (dropOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [dropOpen])
 
   const dashboardLink = {
     admin:            '/admin',
@@ -67,7 +86,7 @@ const Navbar = () => {
           {/* Right section */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropOpen(v => !v)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
@@ -94,14 +113,28 @@ const Navbar = () => {
                         <p className="text-xs text-slate-500 capitalize">{profile?.role?.replace('_', ' ')}</p>
                       </div>
                       <div className="p-2">
-                        <Link to={dashboardLink} className="nav-item text-sm" onClick={() => setDropOpen(false)}>
+                        <Link 
+                          to={dashboardLink} 
+                          className="nav-item text-sm" 
+                          onClick={() => setDropOpen(false)}
+                        >
                           <LayoutDashboard className="w-4 h-4" /> Dashboard
                         </Link>
-                        <Link to="/profile" className="nav-item text-sm" onClick={() => setDropOpen(false)}>
+                        <Link 
+                          to="/profile" 
+                          className="nav-item text-sm" 
+                          onClick={() => setDropOpen(false)}
+                        >
                           <User className="w-4 h-4" /> Profile
                         </Link>
-                        <button onClick={() => { signOut(); setDropOpen(false) }}
-                          className="nav-item text-sm w-full text-red-600 hover:bg-red-50 hover:text-red-700">
+                        <button 
+                          onClick={async () => { 
+                            setDropOpen(false)
+                            await signOut()
+                            navigate('/')
+                          }}
+                          className="nav-item text-sm w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
                           <LogOut className="w-4 h-4" /> Sign Out
                         </button>
                       </div>
@@ -153,10 +186,19 @@ const Navbar = () => {
               <div className="border-t border-slate-100 pt-3 mt-3 space-y-1">
                 {user ? (
                   <>
-                    <Link to={dashboardLink} className="block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">
+                    <Link 
+                      to={dashboardLink} 
+                      className="block px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50"
+                    >
                       Dashboard
                     </Link>
-                    <button onClick={signOut} className="block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50">
+                    <button 
+                      onClick={async () => {
+                        await signOut()
+                        navigate('/')
+                      }} 
+                      className="block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
+                    >
                       Sign Out
                     </button>
                   </>

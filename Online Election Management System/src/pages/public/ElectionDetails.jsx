@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { getErrorMessage, getRuntimeStatus, registerForElection, runQuery } from '../../lib/electionData'
 import { useAuth } from '../../contexts/AuthContext'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
@@ -18,6 +19,7 @@ const ElectionDetails = () => {
   const [loading, setLoading] = useState(true)
   const [registering, setRegistering] = useState(false)
   const [voterStatus, setVoterStatus] = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchElection()
@@ -25,42 +27,40 @@ const ElectionDetails = () => {
 
   const fetchElection = async () => {
     setLoading(true)
+    setError('')
     try {
-      // Basic fetch to simulate full details
-      const { data, error } = await supabase
-        .from('elections')
-        .select('*, polls(id, title, description, candidates(id, name, designation))')
-        .eq('id', id)
-        .single()
-        
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('elections')
+          .select('*, polls(id, title, description, candidates(id, name, designation))')
+          .eq('id', id)
+          .single(),
+        'Loading election details'
+      )
       
-      let status = data.status
-      const now = new Date()
-      if (status !== 'draft') {
-          if (data.end_at && new Date(data.end_at) < now) status = 'completed'
-          else if (data.start_at && new Date(data.start_at) <= now) status = 'active'
-          else status = 'upcoming'
-      }
+      const status = getRuntimeStatus(data)
       
       setElection({ ...data, status })
       setPolls(data.polls || [])
       
       if (user && data.polls?.length > 0) {
          // Check registration status for first poll for simplicity
-         const { data: reg } = await supabase
-           .from('voter_registrations')
-           .select('status')
-           .eq('poll_id', data.polls[0].id)
-           .eq('user_id', user.id)
-           .single()
+         const { data: reg } = await runQuery(
+           supabase
+             .from('voter_registrations')
+             .select('status')
+             .eq('poll_id', data.polls[0].id)
+             .eq('user_id', user.id)
+             .maybeSingle(),
+           'Checking registration status'
+         )
          if (reg) setVoterStatus(reg.status)
       }
       
-    } catch {
-      // Mock data if failed
-      setElection(mockElection)
-      setPolls(mockElection.polls)
+    } catch (error) {
+      setError(getErrorMessage(error, 'Election could not be loaded.'))
+      setElection(null)
+      setPolls([])
       setVoterStatus(null)
     } finally {
       setLoading(false)
@@ -74,33 +74,23 @@ const ElectionDetails = () => {
     }
     setRegistering(true)
     try {
-       if (polls.length === 0) throw new Error("No polls configured for this election.")
-       
-       const { error: regError } = await supabase.from('voter_registrations').insert({
-          poll_id: polls[0].id,
-          user_id: user.id,
-          status: 'registered'
-       })
-       if (regError) throw regError
+       const result = await registerForElection({ election, polls, userId: user.id })
 
-       // Generate Secret ID
-       const rawSecret = Math.random().toString(36).substring(2, 10).toUpperCase()
-       const { error: secError } = await supabase.from('secret_ids').insert({
-          poll_id: polls[0].id,
-          user_id: user.id,
-          hashed_secret: rawSecret, // In production, hash this
-          masked_secret: rawSecret
-       })
-       if (secError) console.error("Secret ID Generation failed:", secError)
+       if (result.status === 'waitlisted') {
+          setVoterStatus('waitlisted')
+          toast.success('Election is full. You have been added to the waitlist.')
+          fetchElection()
+          return
+       }
        
-       toast.success('Successfully registered! Check your Dashboard for your Secret ID.')
+       toast.success(result.alreadyRegistered ? 'You are already registered.' : 'Successfully registered! Check your Dashboard for your Secret ID.')
        setVoterStatus('registered')
+       fetchElection() // Refresh to update status
     } catch (err) {
-       // Friendly error if they try to register for the mock data
-       if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
-          toast.error('This is a mock election. Please create a real election from the Creator Dashboard first!')
+       if (err.code === '23505') {
+          toast.error('You are already registered for this election.')
        } else {
-          toast.error(err.message || 'Registration failed')
+          toast.error(getErrorMessage(err, 'Registration failed'))
        }
     } finally {
        setRegistering(false)
@@ -116,7 +106,18 @@ const ElectionDetails = () => {
      </div>
   )
 
-  if (!election) return <div className="text-center pt-32">Election not found</div>
+  if (!election) return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Navbar />
+      <main className="flex-1 max-w-3xl mx-auto px-4 w-full pt-32 pb-12 text-center">
+        <AlertCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h1 className="font-display text-2xl font-bold text-slate-800 mb-2">Election not found</h1>
+        <p className="text-slate-500">{error || 'This election is unavailable or no longer public.'}</p>
+        <Link to="/elections" className="btn-primary inline-flex mt-6">Back to Elections</Link>
+      </main>
+      <Footer />
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -221,6 +222,12 @@ const ElectionDetails = () => {
                        <p className="text-sm text-slate-600">This election has ended.</p>
                     )}
                  </div>
+              ) : voterStatus === 'waitlisted' ? (
+                 <div className="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
+                    <AlertCircle className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                    <p className="text-orange-800 font-semibold">On Waitlist</p>
+                    <p className="text-orange-600 text-xs mt-1">This election is currently full. We'll notify you if a spot opens up.</p>
+                 </div>
               ) : (
                  <div className="text-center">
                     {election.status === 'completed' ? (
@@ -291,23 +298,6 @@ const ElectionDetails = () => {
       <Footer />
     </div>
   )
-}
-
-const mockElection = {
-  id: '00000000-0000-0000-0000-000000000001', title: 'Student Council Election 2025', category: 'Student Council',
-  description: 'Annual election for student council representatives across all departments. Your vote helps shape the future of our university activities, budget allocations, and student policies.',
-  status: 'active', start_at: new Date(Date.now() - 86400000).toISOString(),
-  end_at: new Date(Date.now() + 86400000 * 2).toISOString(),
-  max_voters: 500,
-  polls: [
-     { id: '11111111-1111-1111-1111-111111111111', title: 'Presidential Ballot', candidates: [
-        { id: '22222222-2222-2222-2222-222222222221', name: 'Alice Johnson', designation: 'Engineering' },
-        { id: '22222222-2222-2222-2222-222222222222', name: 'Bob Smith', designation: 'Arts' }
-     ]},
-     { id: '11111111-1111-1111-1111-111111111112', title: 'Treasurer Ballot', candidates: [
-        { id: '22222222-2222-2222-2222-222222222223', name: 'Charlie Brown', designation: 'Business' },
-     ]}
-  ]
 }
 
 export default ElectionDetails

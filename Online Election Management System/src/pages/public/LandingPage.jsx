@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { supabase } from '../../lib/supabase'
+import { fetchPlatformStats, fetchVisibleElections, getErrorMessage } from '../../lib/electionData'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import ElectionCard from '../../components/elections/ElectionCard'
@@ -36,6 +36,7 @@ const LandingPage = () => {
   const [filter, setFilter]       = useState('All')
   const [search, setSearch]       = useState('')
   const [stats, setStats]         = useState({ total: 0, active: 0, voters: 0, votes: 0 })
+  const [error, setError]         = useState('')
 
   useEffect(() => {
     fetchElections()
@@ -43,28 +44,14 @@ const LandingPage = () => {
   }, [])
 
   const fetchElections = async () => {
+    setLoading(true)
+    setError('')
     try {
-      const { data, error } = await supabase
-        .from('elections')
-        .select(`*, polls(id, votes:votes(count))`)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(12)
-      if (error) throw error
-
-      // Compute vote counts and statuses
-      const now = new Date()
-      const enriched = (data || []).map(el => {
-        let status = 'upcoming'
-        if (el.end_at && new Date(el.end_at) < now) status = 'completed'
-        else if (el.start_at && new Date(el.start_at) <= now) status = 'active'
-        const voteCount = el.polls?.reduce((sum, p) => sum + (p.votes?.[0]?.count || 0), 0) || 0
-        return { ...el, status, vote_count: voteCount }
-      })
-      setElections(enriched)
-    } catch {
-      // Use mock data if DB not connected
-      setElections(mockElections)
+      setElections(await fetchVisibleElections({ limit: 12, orderBy: 'created_at' }))
+    } catch (error) {
+      console.error('Failed to fetch elections:', error)
+      setError(getErrorMessage(error, 'Failed to load elections.'))
+      setElections([])
     } finally {
       setLoading(false)
     }
@@ -72,15 +59,10 @@ const LandingPage = () => {
 
   const fetchStats = async () => {
     try {
-      const [{ count: total }, { count: active }, { count: voters }, { count: votes }] = await Promise.all([
-        supabase.from('elections').select('*', { count: 'exact', head: true }),
-        supabase.from('elections').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'voter'),
-        supabase.from('votes').select('*', { count: 'exact', head: true }),
-      ])
-      setStats({ total: total || 0, active: active || 0, voters: voters || 0, votes: votes || 0 })
-    } catch {
-      setStats({ total: 42, active: 8, voters: 1240, votes: 8932 })
+      setStats(await fetchPlatformStats())
+    } catch (error) {
+      console.warn('Stats could not be loaded:', error)
+      setStats({ total: 0, active: 0, voters: 0, votes: 0 })
     }
   }
 
@@ -207,6 +189,12 @@ const LandingPage = () => {
           </div>
 
           {/* Cards grid */}
+          {error && !loading && (
+            <div className="mb-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1,2,3,4,5,6].map(i => <CardSkeleton key={i} />)}
@@ -333,30 +321,5 @@ const EmptyState = () => (
     <p className="text-slate-400 text-sm">Try a different search or filter.</p>
   </div>
 )
-
-// Mock data for when Supabase is not connected
-const mockElections = [
-  {
-    id: '1', title: 'Student Council Election 2025', category: 'Student Council',
-    description: 'Annual election for student council representatives across all departments.',
-    status: 'active', start_at: new Date(Date.now() - 86400000).toISOString(),
-    end_at: new Date(Date.now() + 86400000 * 2).toISOString(),
-    max_voters: 500, vote_count: 312,
-  },
-  {
-    id: '2', title: 'Community Board Election', category: 'Community',
-    description: 'Elect your neighborhood community board members.',
-    status: 'upcoming', start_at: new Date(Date.now() + 86400000 * 3).toISOString(),
-    end_at: new Date(Date.now() + 86400000 * 7).toISOString(),
-    max_voters: 200, vote_count: 0,
-  },
-  {
-    id: '3', title: 'Corporate Leadership Vote', category: 'Corporate',
-    description: 'Annual shareholder vote for board of directors.',
-    status: 'completed', start_at: new Date(Date.now() - 86400000 * 10).toISOString(),
-    end_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-    max_voters: 1000, vote_count: 873,
-  },
-]
 
 export default LandingPage

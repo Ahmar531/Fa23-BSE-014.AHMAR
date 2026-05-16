@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
+import { fetchVoteCountsByPollIds, getRuntimeStatus, runQuery } from '../../lib/electionData'
 import { useAuth } from '../../contexts/AuthContext'
 import StatCard from '../../components/ui/StatCard'
 import { CardSkeleton } from '../../components/ui/Skeleton'
@@ -15,10 +16,22 @@ const CreatorDashboard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
-      fetchStats()
-      fetchElections()
+    const loadData = async () => {
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      
+      try {
+        await Promise.all([fetchStats(), fetchElections()])
+      } catch (error) {
+        console.error('Data load error:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+    
+    loadData()
   }, [user])
 
   const fetchStats = async () => {
@@ -28,20 +41,29 @@ const CreatorDashboard = () => {
         { count: activeElections },
         { count: draftElections },
       ] = await Promise.all([
-        supabase.from('elections').select('*', { count: 'exact', head: true }).eq('creator_id', user.id),
-        supabase.from('elections').select('*', { count: 'exact', head: true }).eq('creator_id', user.id).eq('status', 'active'),
-        supabase.from('elections').select('*', { count: 'exact', head: true }).eq('creator_id', user.id).eq('status', 'draft'),
+        runQuery(supabase.from('elections').select('*', { count: 'exact', head: true }).eq('creator_id', user.id), 'Loading total elections'),
+        runQuery(supabase.from('elections').select('*', { count: 'exact', head: true }).eq('creator_id', user.id).eq('status', 'active'), 'Loading active elections'),
+        runQuery(supabase.from('elections').select('*', { count: 'exact', head: true }).eq('creator_id', user.id).eq('status', 'draft'), 'Loading draft elections'),
       ])
       
       // Get total voters across all elections
-      const { data: electionIds } = await supabase.from('elections').select('id').eq('creator_id', user.id)
+      const { data: electionIds } = await runQuery(
+        supabase.from('elections').select('id').eq('creator_id', user.id),
+        'Loading creator election IDs'
+      )
       let totalVoters = 0
       if (electionIds?.length > 0) {
         const ids = electionIds.map(e => e.id)
-        const { data: polls } = await supabase.from('polls').select('id').in('election_id', ids)
+        const { data: polls } = await runQuery(
+          supabase.from('polls').select('id').in('election_id', ids),
+          'Loading creator polls'
+        )
         if (polls?.length > 0) {
           const pollIds = polls.map(p => p.id)
-          const { count } = await supabase.from('voter_registrations').select('*', { count: 'exact', head: true }).in('poll_id', pollIds)
+          const { count } = await runQuery(
+            supabase.from('voter_registrations').select('*', { count: 'exact', head: true }).in('poll_id', pollIds),
+            'Loading voter count'
+          )
           totalVoters = count || 0
         }
       }
@@ -52,36 +74,41 @@ const CreatorDashboard = () => {
         draftElections: draftElections || 0,
         totalVoters,
       })
-    } catch {
-      setStats({ totalElections: 5, activeElections: 1, draftElections: 2, totalVoters: 450 })
-    } finally {
-      setLoading(false)
+    } catch (error) {
+      console.error('Stats fetch error:', error)
+      setStats({ totalElections: 0, activeElections: 0, draftElections: 0, totalVoters: 0 })
     }
   }
 
   const fetchElections = async () => {
     try {
-      const { data } = await supabase
-        .from('elections')
-        .select(`*, polls(id, votes:votes(count))`)
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3)
+      const { data } = await runQuery(
+        supabase
+          .from('elections')
+          .select('*, polls(id)')
+          .eq('creator_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        'Loading creator elections'
+      )
+
+      const pollIds = (data || []).flatMap(el => (el.polls || []).map(p => p.id))
+      let voteCounts = new Map()
+      try {
+        voteCounts = await fetchVoteCountsByPollIds(pollIds)
+      } catch (error) {
+        console.warn('Creator vote counts could not be loaded:', error)
+      }
         
       const enriched = (data || []).map(el => {
-        let status = el.status
-        const now = new Date()
-        if (status !== 'draft') {
-            if (el.end_at && new Date(el.end_at) < now) status = 'completed'
-            else if (el.start_at && new Date(el.start_at) <= now) status = 'active'
-            else status = 'upcoming'
-        }
-        const voteCount = el.polls?.reduce((sum, p) => sum + (p.votes?.[0]?.count || 0), 0) || 0
+        const status = getRuntimeStatus(el)
+        const voteCount = (el.polls || []).reduce((sum, poll) => sum + (voteCounts.get(poll.id) || 0), 0)
         return { ...el, status, vote_count: voteCount }
       })
-      setElections(enriched || mockElections)
-    } catch {
-      setElections(mockElections)
+      setElections(enriched)
+    } catch (error) {
+      console.error('Elections fetch error:', error)
+      setElections([])
     }
   }
 
@@ -137,24 +164,5 @@ const CreatorDashboard = () => {
     </div>
   )
 }
-
-const mockElections = [
-    {
-      id: '1', title: 'Q3 Board Member Election', category: 'Corporate',
-      status: 'active', start_at: new Date(Date.now() - 86400000).toISOString(),
-      end_at: new Date(Date.now() + 86400000 * 2).toISOString(),
-      max_voters: 150, vote_count: 85,
-    },
-    {
-      id: '2', title: 'Community Association President', category: 'Community',
-      status: 'upcoming', start_at: new Date(Date.now() + 86400000 * 3).toISOString(),
-      end_at: new Date(Date.now() + 86400000 * 7).toISOString(),
-      max_voters: 500, vote_count: 0,
-    },
-    {
-      id: '3', title: 'Yearly Committee Draft', category: 'Other',
-      status: 'draft',
-    },
-]
 
 export default CreatorDashboard

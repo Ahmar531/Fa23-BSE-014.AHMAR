@@ -8,6 +8,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = 'blue',
     green:  { bg: 'bg-green-50',    icon: 'bg-green-100    text-green-700',   text: 'text-green-700' },
     purple: { bg: 'bg-purple-50',   icon: 'bg-purple-100   text-purple-700',  text: 'text-purple-700' },
     orange: { bg: 'bg-orange-50',   icon: 'bg-orange-100   text-orange-700',  text: 'text-orange-700' },
+    yellow: { bg: 'bg-yellow-50',   icon: 'bg-yellow-100   text-yellow-700',  text: 'text-yellow-700' },
     red:    { bg: 'bg-red-50',      icon: 'bg-red-100      text-red-700',     text: 'text-red-700' },
   }
   const c = colors[color] || colors.blue

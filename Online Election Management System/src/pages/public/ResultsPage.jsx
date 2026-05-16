@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { runQuery } from '../../lib/electionData'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { CardSkeleton } from '../../components/ui/Skeleton'
@@ -17,32 +18,42 @@ const ResultsPage = () => {
 
   useEffect(() => {
     fetchResults()
+    
+    // Real-time polling every 10 seconds for live results
+    const interval = setInterval(() => {
+      fetchResults()
+    }, 10000)
+    
+    return () => clearInterval(interval)
   }, [id])
 
   const fetchResults = async () => {
     try {
       // Fetch Election
-      const { data: elData, error: elError } = await supabase
-        .from('elections')
-        .select('*')
-        .eq('id', id)
-        .single()
-      if (elError) throw elError
+      const { data: elData } = await runQuery(
+        supabase
+          .from('elections')
+          .select('*')
+          .eq('id', id)
+          .single(),
+        'Loading election results'
+      )
       setElection(elData)
 
       // Fetch Polls, Candidates, and count votes
-      const { data: pollData, error: pollError } = await supabase
-        .from('polls')
-        .select(`
-          id, title,
-          candidates (
-            id, name, designation,
-            votes (count)
-          )
-        `)
-        .eq('election_id', id)
-        
-      if (pollError) throw pollError
+      const { data: pollData } = await runQuery(
+        supabase
+          .from('polls')
+          .select(`
+            id, title,
+            candidates (
+              id, name, designation,
+              votes (count)
+            )
+          `)
+          .eq('election_id', id),
+        'Loading vote results'
+      )
 
       // Transform data for charts
       const transformedResults = (pollData || []).map(poll => {
@@ -109,7 +120,7 @@ const ResultsPage = () => {
                             <Trophy className="w-5 h-5 text-yellow-600" />
                          </div>
                          <div>
-                            <p className="text-xs text-yellow-600 uppercase font-bold tracking-wider">Current Leader</p>
+                            <p className="text-xs text-yellow-600 uppercase font-bold tracking-wider">{election?.status === 'completed' ? 'Final Winner' : 'Current Leader'}</p>
                             <p className="font-bold text-slate-800">{poll.winner.name} ({poll.winner.votes} votes)</p>
                          </div>
                       </div>

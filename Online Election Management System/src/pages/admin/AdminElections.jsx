@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { getErrorMessage, runQuery } from '../../lib/electionData'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -26,14 +27,16 @@ const AdminElections = () => {
   const fetchElections = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('elections')
-        .select('*, users:creator_id(name, email)')
-        .order('created_at', { ascending: false })
-      if (error) throw error
+      const { data } = await runQuery(
+        supabase
+          .from('elections')
+          .select('*, users:creator_id(name, email)')
+          .order('created_at', { ascending: false }),
+        'Loading elections'
+      )
       setElections(data || [])
-    } catch {
-      toast.error('Failed to load elections')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to load elections'))
       setElections([])
     } finally {
       setLoading(false)
@@ -42,24 +45,28 @@ const AdminElections = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const { error } = await supabase.from('elections').update({ status: newStatus }).eq('id', id)
-      if (error) throw error
+      await runQuery(
+        supabase.from('elections').update({ status: newStatus }).eq('id', id),
+        'Updating election status'
+      )
       setElections(prev => prev.map(e => e.id === id ? { ...e, status: newStatus } : e))
       toast.success('Election status updated')
-    } catch {
-      toast.error('Failed to update status')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to update status'))
     }
   }
 
   const handleDelete = async (id, title) => {
     if (!confirm(`Delete election "${title}"? This action cannot be undone.`)) return
     try {
-      const { error } = await supabase.from('elections').delete().eq('id', id)
-      if (error) throw error
+      await runQuery(
+        supabase.from('elections').delete().eq('id', id),
+        'Deleting election'
+      )
       setElections(prev => prev.filter(e => e.id !== id))
       toast.success('Election deleted')
-    } catch {
-      toast.error('Failed to delete election')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to delete election'))
     }
   }
 
