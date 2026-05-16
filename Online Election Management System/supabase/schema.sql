@@ -2,6 +2,18 @@
 -- VoteSecure Supabase Database Schema
 -- ==========================================
 
+-- Drop existing tables to avoid "relation already exists" errors
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.audit_logs CASCADE;
+DROP TABLE IF EXISTS public.votes CASCADE;
+DROP TABLE IF EXISTS public.secret_ids CASCADE;
+DROP TABLE IF EXISTS public.voter_registrations CASCADE;
+DROP TABLE IF EXISTS public.candidates CASCADE;
+DROP TABLE IF EXISTS public.polls CASCADE;
+DROP TABLE IF EXISTS public.elections CASCADE;
+DROP TABLE IF EXISTS public.creator_requests CASCADE;
+DROP TABLE IF EXISTS public.users CASCADE;
+
 -- 1. Users Table (Extends Supabase Auth)
 CREATE TABLE public.users (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,

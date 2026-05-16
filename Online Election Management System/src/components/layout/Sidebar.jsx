@@ -19,7 +19,6 @@ const adminNav = [
 const creatorNav = [
   { label: 'Dashboard',       to: '/creator',            icon: LayoutDashboard },
   { label: 'My Elections',    to: '/creator/elections',  icon: Vote },
-  { label: 'Candidates',      to: '/creator/candidates', icon: Users },
   { label: 'Voter Lists',     to: '/creator/voters',     icon: ListChecks },
   { label: 'Results',         to: '/creator/results',    icon: BarChart3 },
 ]
@@ -118,8 +117,11 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       {/* Bottom actions */}
       <div className="px-3 py-4 border-t border-white/10 space-y-1">
         <NavLink
-          to="/profile"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-all"
+          to={`/${profile?.role === 'admin' ? 'admin' : profile?.role === 'election_creator' ? 'creator' : 'voter'}/profile`}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+             ${isActive ? 'bg-white/20 text-white' : 'text-blue-200 hover:bg-white/10 hover:text-white'}`
+          }
           title={collapsed ? 'Profile' : undefined}
         >
           <Settings className="w-5 h-5 shrink-0" />

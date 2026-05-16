@@ -6,8 +6,10 @@ import toast from 'react-hot-toast'
 import { Vote, ArrowLeft, Calendar, Users, Settings } from 'lucide-react'
 
 const CreateElectionPage = () => {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
+  const isAdmin = profile?.role === 'admin'
+  const backPath = isAdmin ? '/admin/elections' : '/creator'
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -55,7 +57,7 @@ const CreateElectionPage = () => {
       }
 
       toast.success(publish ? 'Election published successfully!' : 'Draft saved successfully!')
-      navigate('/creator')
+      navigate(isAdmin ? '/admin/elections' : '/creator')
     } catch (error) {
       toast.error(error.message || 'Failed to create election')
     } finally {
@@ -65,9 +67,9 @@ const CreateElectionPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex items-center gap-4 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate(backPath)} className="p-2 -ml-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+          <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-800">Create New Election</h1>

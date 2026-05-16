@@ -225,6 +225,11 @@ const ElectionDetails = () => {
                  <div className="text-center">
                     {election.status === 'completed' ? (
                        <p className="text-sm text-slate-600">This election has ended. Registration is closed.</p>
+                    ) : election.deadline && new Date(election.deadline) < new Date() ? (
+                       <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100">
+                          <p className="font-semibold text-sm">Registration Closed</p>
+                          <p className="text-xs mt-1">The deadline to register for this election has passed. The voter list is now locked.</p>
+                       </div>
                     ) : (
                        <>
                           <p className="text-sm text-slate-600 mb-4">You are not registered for this election. Registration is required to vote.</p>
