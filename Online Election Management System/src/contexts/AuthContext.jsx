@@ -109,12 +109,36 @@ export const AuthProvider = ({ children }) => {
       }
     )
     
+    // Listen for profile changes in real-time
+    let profileSubscription = null
+    if (user?.id) {
+      profileSubscription = supabase
+        .channel('profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'users',
+            filter: `id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Profile updated:', payload.new)
+            setProfile(payload.new)
+          }
+        )
+        .subscribe()
+    }
+    
     return () => {
       mounted = false
       clearTimeout(loadingTimeout)
       subscription.unsubscribe()
+      if (profileSubscription) {
+        profileSubscription.unsubscribe()
+      }
     }
-  }, [])
+  }, [user?.id])
 
   const signUp = async ({ email, password, name, phone, role = 'voter' }) => {
     const { data, error } = await supabase.auth.signUp({

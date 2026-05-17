@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
 import ElectionCard from '../../components/elections/ElectionCard'
 import { CardSkeleton } from '../../components/ui/Skeleton'
-import { Vote, Search, Filter } from 'lucide-react'
+import { Vote, Search } from 'lucide-react'
 
 const CreatorElections = () => {
   const { user } = useAuth()
@@ -71,6 +71,7 @@ const CreatorElections = () => {
             <Vote className="w-6 h-6 text-primary-600" /> My Elections
           </h1>
           <p className="text-slate-500 text-sm mt-1">All elections you have created</p>
+          <p className="text-primary-700 text-xs mt-1">To add candidates, open an election and click "Manage Candidates".</p>
         </div>
         <Link to="/creator/elections/new" className="btn-primary flex items-center gap-2">
           + Create Election
@@ -116,14 +117,14 @@ const CreatorElections = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((el, i) => (
-            <div key={el.id} className="relative group">
+            <div key={el.id} className="relative">
               <ElectionCard election={el} index={i} />
-              <div className="absolute top-3 right-3 hidden group-hover:flex gap-2 z-10">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   to={`/creator/elections/${el.id}/candidates`}
-                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm"
+                  className="px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg text-xs font-semibold text-primary-700 hover:bg-primary-100 transition-colors"
                 >
-                  Manage
+                  Manage Candidates
                 </Link>
                 <button
                   onClick={() => handleDelete(el.id)}

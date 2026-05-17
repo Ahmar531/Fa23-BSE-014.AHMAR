@@ -20,6 +20,7 @@ const creatorNav = [
   { label: 'Dashboard',       to: '/creator',            icon: LayoutDashboard },
   { label: 'My Elections',    to: '/creator/elections',  icon: Vote },
   { label: 'Voter Lists',     to: '/creator/voters',     icon: ListChecks },
+  { label: 'Notifications',   to: '/creator/notifications', icon: Bell },
   { label: 'Results',         to: '/creator/results',    icon: BarChart3 },
 ]
 

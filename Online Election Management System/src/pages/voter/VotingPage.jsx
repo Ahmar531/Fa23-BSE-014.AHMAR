@@ -37,12 +37,20 @@ const VotingPage = () => {
         'Loading election'
       )
 
-      const runtimeStatus = getRuntimeStatus(electionData)
-      electionData.status = runtimeStatus
-
       setElection(electionData)
 
-      if (runtimeStatus !== 'active') {
+      // Check if election is active - prioritize database status
+      const isActive = electionData.status === 'active'
+      
+      console.log('Election status check:', {
+        db_status: electionData.status,
+        isActive,
+        start_at: electionData.start_at,
+        end_at: electionData.end_at
+      })
+      
+      if (!isActive) {
+         console.error('Election not active:', electionData.status)
          toast.error('This election is not currently active.')
          navigate(`/elections/${id}`)
          return
@@ -72,6 +80,9 @@ const VotingPage = () => {
          
          const hasRegistration = regs?.some(reg => reg.status === 'registered')
          const hasVoted = regs?.some(reg => reg.status === 'voted')
+         
+         console.log('Registration check:', { hasRegistration, hasVoted, regs })
+         
          if (!hasRegistration || hasVoted) {
             toast.error(hasVoted ? 'You have already voted in this election.' : 'You are not registered for this election.')
             navigate(`/elections/${id}`)
@@ -79,6 +90,7 @@ const VotingPage = () => {
       }
 
     } catch (error) {
+      console.error('Voting data fetch error:', error)
       toast.error('Failed to load voting booth.')
       navigate(`/elections/${id}`)
     } finally {

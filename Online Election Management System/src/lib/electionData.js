@@ -28,12 +28,15 @@ export const getRuntimeStatus = (election, now = new Date()) => {
   if (!election) return 'upcoming'
   if (election.status === 'draft') return 'draft'
   if (election.status === 'completed') return 'completed'
+  
+  // If database status is 'active', trust it (creator manually started it)
+  if (election.status === 'active') return 'active'
 
   const start = election.start_at ? new Date(election.start_at) : null
   const end = election.end_at ? new Date(election.end_at) : null
 
   if (end && end <= now) return 'completed'
-  if (election.status === 'active') return 'active'
+  if (start && start <= now && election.status === 'published') return 'active'
   if (start && start <= now) return 'active'
   return 'upcoming'
 }

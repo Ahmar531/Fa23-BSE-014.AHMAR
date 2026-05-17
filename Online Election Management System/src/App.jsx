@@ -86,6 +86,7 @@ const router = createBrowserRouter([
       { path: '/creator/elections/:id/candidates', element: <ManageCandidates /> },
       { path: '/creator/candidates', element: <Navigate to="/creator/elections" replace /> },
       { path: '/creator/voters', element: <CreatorVoters /> },
+      { path: '/creator/notifications', element: <VoterNotifications /> },
       { path: '/creator/results', element: <CreatorResults /> },
       { path: '/creator/profile', element: <ProfilePage /> },
     ]
