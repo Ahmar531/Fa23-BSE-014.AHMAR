@@ -1,18 +1,49 @@
+# Project Preview
+
+## Live Demo
+
+🌐 **Live Website:**
+[https://fa23-bse-014-ahmar-k3cz.vercel.app](https://fa23-bse-014-ahmar-k3cz.vercel.app)
+
+---
+
+# Application Screenshots
+
+<div align="center">
+
+| Home Dashboard                                                                                             | Committee Panel                                                                                            |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/2b7a78c5-5f22-4712-859e-9e34a7c40587" width="100%" /> | <img src="https://github.com/user-attachments/assets/c6d1adce-6eba-4369-b0ef-4c6289306452" width="100%" /> |
+
+| Committee Management                                                                                       | User Management                                                                                            |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/08e019d6-9478-4a20-b0ce-20ed3d36836e" width="100%" /> | <img src="https://github.com/user-attachments/assets/60560bc7-19a0-47ae-9e9e-ffe541b6f6ab" width="100%" /> |
+
+| Authentication System                                                                                      | Admin Dashboard                                                                                            |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/5f349dc6-e26d-4929-ba32-8f19f9f8a11a" width="100%" /> | <img src="https://github.com/user-attachments/assets/35b84fc3-d135-4777-83ac-fce933e85c1d" width="100%" /> |
+
+| Event & Meeting Module                                                                                     | Notifications & Updates                                                                                    |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/da03ff34-8918-458c-9be5-0fbab50e3cf1" width="100%" /> | <img src="https://github.com/user-attachments/assets/8642be1d-656f-4b92-8cdd-fde358073bc9" width="100%" /> |
+
+| Responsive Design                                                                                          | Full System Preview                                                                                        |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://github.com/user-attachments/assets/33943a06-b469-4a90-a68c-6af38059ff36" width="100%" /> | <img src="https://github.com/user-attachments/assets/46fd791d-1286-4551-9705-83f93d062487" width="100%" /> |
+
+</div>
+
+---
+
+
+
+
+
+
 # 🗳️ VoteSecure: Online Election Management System
 
 VoteSecure is a complete, production-ready Secure Online Election Management System built with React, Vite, Tailwind CSS v4, and Supabase. It offers a transparent, secure, and modern platform for conducting digital elections with full auditability, role-based access control, and cryptographic security measures.
 
-## ⚡ Quick Fix (If You Have Issues)
-
-If you're facing role or voting issues, run this in Supabase SQL Editor:
-
-```sql
--- See COPY_PASTE_THIS.sql for the complete fix
-UPDATE users SET role = 'election_creator', verified = true WHERE name ILIKE '%abdul%';
-UPDATE elections SET status = 'active', deadline = NOW() - INTERVAL '1 hour', start_at = NOW(), end_at = NOW() + INTERVAL '7 days' WHERE title ILIKE '%student%';
-```
-
-Then clear browser cache: `localStorage.clear()` in console (F12).
 
 ---
 
