@@ -246,37 +246,50 @@ class MockQueryBuilder {
       return { data: list, error: null, count: this.countMode ? list.length : null };
     }
 
-    if (type === 'INSERT') {
-      const recordsToInsert = Array.isArray(data) ? data : [data];
+    if (type === 'INSERT' || type === 'UPSERT') {
+      const actualData = type === 'UPSERT' ? data.data : data;
+      const recordsToInsert = Array.isArray(actualData) ? actualData : [actualData];
       const inserted = [];
 
       recordsToInsert.forEach(item => {
-        const newItem = {
-          id: item.id || (this.table.substring(0,3) + '-' + Math.random().toString(36).substring(2, 9)),
-          created_at: new Date().toISOString(),
-          ...item
-        };
-        db[this.table].push(newItem);
-        inserted.push(newItem);
+        let isUpdate = false;
+        if (type === 'UPSERT' && item.id) {
+          const existingIndex = db[this.table].findIndex(r => r.id === item.id);
+          if (existingIndex !== -1) {
+            db[this.table][existingIndex] = { ...db[this.table][existingIndex], ...item };
+            inserted.push(db[this.table][existingIndex]);
+            isUpdate = true;
+          }
+        }
 
-        // If insert is into users and role is doctor, create doctor profile automatically
-        if (this.table === 'users' && newItem.role === 'doctor') {
-          const hasDoc = db.doctors.find(d => d.user_id === newItem.id);
-          if (!hasDoc) {
-            db.doctors.push({
-              id: 'doc-' + Math.random().toString(36).substring(2, 9),
-              user_id: newItem.id,
-              specialization: 'General Physician',
-              treatment_type: 'Allopathic',
-              city: 'Lahore',
-              consultation_fee: 1000,
-              experience_years: 5,
-              rating: 4.5,
-              bio: 'General practitioner ready to help.',
-              is_approved: false,
-              is_available: true,
-              created_at: new Date().toISOString()
-            });
+        if (!isUpdate) {
+          const newItem = {
+            id: item.id || (this.table.substring(0,3) + '-' + Math.random().toString(36).substring(2, 9)),
+            created_at: new Date().toISOString(),
+            ...item
+          };
+          db[this.table].push(newItem);
+          inserted.push(newItem);
+
+          // If insert is into users and role is doctor, create doctor profile automatically
+          if (this.table === 'users' && newItem.role === 'doctor') {
+            const hasDoc = db.doctors.find(d => d.user_id === newItem.id);
+            if (!hasDoc) {
+              db.doctors.push({
+                id: 'doc-' + Math.random().toString(36).substring(2, 9),
+                user_id: newItem.id,
+                specialization: 'General Physician',
+                treatment_type: 'Allopathic',
+                city: 'Lahore',
+                consultation_fee: 1000,
+                experience_years: 5,
+                rating: 4.5,
+                bio: 'General practitioner ready to help.',
+                is_approved: false,
+                is_available: true,
+                created_at: new Date().toISOString()
+              });
+            }
           }
         }
       });
@@ -327,6 +340,12 @@ class MockQueryBuilder {
   insert(data) {
     this.action = 'INSERT';
     this.actionData = data;
+    return this;
+  }
+
+  upsert(data, options) {
+    this.action = 'UPSERT';
+    this.actionData = { data, options };
     return this;
   }
 
