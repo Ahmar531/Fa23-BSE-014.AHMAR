@@ -1,3 +1,111 @@
+# 🩺 Doctor Hub
+
+Doctor Hub is a modern healthcare appointment management system that allows patients to book appointments, explore doctors, and manage healthcare services efficiently.
+
+## 🚀 Live Demo
+
+🔗 https://doctor-hub-ahmar.vercel.app
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Home Page
+
+![Home Page](https://github.com/user-attachments/assets/d4d5deb3-6b83-4f50-a8e8-c9a3fd167cce)
+
+---
+
+### 👨‍⚕️ Doctors Section
+
+![Doctors](https://github.com/user-attachments/assets/2c87c563-5e64-4e25-ad20-82bc81f1cd85)
+
+---
+
+### 🔍 Doctor Details
+
+![Doctor Details](https://github.com/user-attachments/assets/0bdff3da-461c-4112-9663-e125c65406d8)
+
+---
+
+### 📅 Appointment Booking
+
+![Appointment Booking](https://github.com/user-attachments/assets/a962e3ab-c919-4027-a8c3-aaa7ed51c738)
+
+---
+
+### 📊 Dashboard Overview
+
+![Dashboard](https://github.com/user-attachments/assets/e65e636b-062c-4189-aaa7-ed7def92c13c)
+
+---
+
+### 📈 Analytics Section
+
+![Analytics](https://github.com/user-attachments/assets/45fee1d1-e800-4de1-8feb-2163ef7a3d63)
+
+---
+
+### 🔐 Authentication Page
+
+![Authentication](https://github.com/user-attachments/assets/60170adb-d0f2-4283-97fc-04f30c3716bf)
+
+---
+
+### 💻 Responsive Design
+
+#### Desktop View
+
+![Desktop View](https://github.com/user-attachments/assets/ce4233d7-289e-4317-8ba0-8142ea6b59c2)
+
+#### Tablet View
+
+![Tablet View](https://github.com/user-attachments/assets/500555e1-f6d5-4e06-a2bd-5abe5900fb57)
+
+#### Mobile View
+
+![Mobile View](https://github.com/user-attachments/assets/f91e8576-a51a-45ca-8f81-7c7d6b4612de)
+
+#### Small Mobile View
+
+![Small Mobile View](https://github.com/user-attachments/assets/b4b8f8cf-a161-4644-aa95-e5c3ecb7d036)
+
+---
+
+## ✨ Features
+
+- User Authentication
+- Doctor Listings
+- Doctor Details Page
+- Appointment Booking
+- Dashboard Management
+- Responsive Design
+- Modern UI/UX
+- Fast Performance
+
+## 🛠️ Tech Stack
+
+- React.js
+- Tailwind CSS
+- Firebase Authentication
+- React Router
+- Vercel Deployment
+
+## 📦 Installation
+
+```bash
+git clone <repository-url>
+cd doctor-hub
+npm install
+npm run dev
+
+
+
+
+
+
+
+
 # Doctor Hub - Healthcare Consultation Platform
 
 <cite index="1-1">Doctor Hub is a healthcare consultation and patient history management system where patients can search doctors according to disease and treatment type including Allopathic, Homeopathic, and Herbal doctors.</cite>
