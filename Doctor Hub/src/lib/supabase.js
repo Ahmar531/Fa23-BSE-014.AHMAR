@@ -37,30 +37,41 @@ const SEED_USERS = [
 ];
 
 const getLocalStorage = (key, defaultValue) => {
-  const data = localStorage.getItem(key);
-  if (!data) {
+  try {
+    const data = localStorage.getItem(key);
+    if (!data) {
+      localStorage.setItem(key, JSON.stringify(defaultValue));
+      return defaultValue;
+    }
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Error parsing localStorage for', key, e);
+    localStorage.removeItem(key);
     localStorage.setItem(key, JSON.stringify(defaultValue));
     return defaultValue;
   }
-  return JSON.parse(data);
 };
 
 const setLocalStorage = (key, value) => {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('localStorage.setItem failed:', e);
+  }
 };
 
 const getDB = () => ({
-  users: getLocalStorage('dh_users', SEED_USERS),
-  doctors: getLocalStorage('dh_doctors', SEED_DOCTORS),
+  users: getLocalStorage('dh_users', SEED_USERS) || SEED_USERS,
+  doctors: getLocalStorage('dh_doctors', SEED_DOCTORS) || SEED_DOCTORS,
   clinics: getLocalStorage('dh_clinics', [
     { id: 'clinic-1', doctor_id: 'usr-doc-1', name: 'Metro Heart Center', address: 'Jail Road, Gulberg', city: 'Lahore', schedule: 'Mon-Fri 4PM-8PM', fee: 2000 },
     { id: 'clinic-2', doctor_id: 'usr-doc-2', name: 'Ali Homeo Clinic', address: 'Clifton Block 5', city: 'Karachi', schedule: 'Tue-Sat 2PM-6PM', fee: 1200 }
-  ]),
-  appointments: getLocalStorage('dh_appointments', []),
-  payments: getLocalStorage('dh_payments', []),
-  medical_history: getLocalStorage('dh_medical_history', []),
-  prescriptions: getLocalStorage('dh_prescriptions', []),
-  messages: getLocalStorage('dh_messages', [])
+  ]) || [],
+  appointments: getLocalStorage('dh_appointments', []) || [],
+  payments: getLocalStorage('dh_payments', []) || [],
+  medical_history: getLocalStorage('dh_medical_history', []) || [],
+  prescriptions: getLocalStorage('dh_prescriptions', []) || [],
+  messages: getLocalStorage('dh_messages', []) || []
 });
 
 const saveDB = (db) => {
