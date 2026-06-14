@@ -5,28 +5,30 @@ import { Stethoscope, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const rolePaths = {
-  patient: '/patient',
-  doctor: '/doctor',
-  assistant: '/assistant',
-  admin: '/admin',
+  patient:     '/patient',
+  doctor:      '/doctor',
+  assistant:   '/assistant',
+  admin:       '/admin',
   super_admin: '/superadmin',
 };
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm]         = useState({ email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { profile } = await login(form);
-      navigate(rolePaths[profile?.role] || '/patient', { replace: true });
+      const result = await login(form);
+      // login() returns { profile } after fully loading it — safe to navigate
+      const dest = rolePaths[result?.profile?.role] || '/patient';
+      navigate(dest, { replace: true });
     } catch (err) {
-      toast.error(err.message || 'Login failed');
+      toast.error(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

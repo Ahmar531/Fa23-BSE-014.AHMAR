@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 import { isMocked } from '../../lib/supabase';
 
 const roles = [
-  { value: 'patient', label: '🧑‍⚕️ Patient', desc: 'Book appointments & manage history' },
-  { value: 'doctor', label: '👨‍⚕️ Doctor', desc: 'Manage clinic, prescriptions & schedule' },
+  { value: 'patient',   label: '🧑‍⚕️ Patient',   desc: 'Book appointments & manage history' },
+  { value: 'doctor',    label: '👨‍⚕️ Doctor',    desc: 'Manage clinic, prescriptions & schedule' },
   { value: 'assistant', label: '🧑‍💼 Assistant', desc: 'Verify payments & appointments' },
 ];
 
@@ -16,26 +16,29 @@ const rolePaths = { patient: '/patient', doctor: '/doctor', assistant: '/assista
 export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '', role: 'patient' });
+  const [form, setForm]         = useState({ email: '', password: '', fullName: '', phone: '', role: 'patient' });
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [done, setDone]         = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.fullName.trim()) { toast.error('Full name is required'); return; }
+    if (!form.fullName.trim())    { toast.error('Full name is required'); return; }
     if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+
     setLoading(true);
     try {
-      await register(form);
-      if (isMocked) {
-        // Auto-navigated by AuthContext, but navigate as fallback
-        navigate(rolePaths[form.role] || '/patient');
+      const result = await register(form);
+
+      if (isMocked || result?.session || result?.profile) {
+        // Signed in immediately → go to dashboard
+        navigate(rolePaths[form.role] || '/patient', { replace: true });
       } else {
+        // Email confirmation required → show "check your email" screen
         setDone(true);
       }
     } catch (err) {
-      toast.error(err.message || 'Registration failed');
+      toast.error(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -43,11 +46,12 @@ export default function RegisterPage() {
 
   if (done) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
-      <div style={{ textAlign: 'center', maxWidth: 420 }}>
+      <div style={{ textAlign: 'center', maxWidth: 420, padding: 24 }}>
         <div style={{ fontSize: 64, marginBottom: 20 }}>✉️</div>
         <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12 }}>Check Your Email</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-          We've sent a confirmation link to <strong style={{ color: 'var(--text-primary)' }}>{form.email}</strong>. Please verify to activate your account.
+          We've sent a confirmation link to <strong style={{ color: 'var(--text-primary)' }}>{form.email}</strong>.<br />
+          Please verify your email to activate your account.
         </p>
         <Link to="/login" className="btn btn-primary">Go to Login</Link>
       </div>

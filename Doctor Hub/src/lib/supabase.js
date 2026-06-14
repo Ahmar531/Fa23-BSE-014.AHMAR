@@ -81,8 +81,14 @@ const mockAuth = {
       }
     };
     window.addEventListener('dh_auth_change', handler);
-    // Initial call
-    setTimeout(() => callback('SIGNED_IN', mockSession), 0);
+    // Only fire SIGNED_IN if a valid session exists; otherwise signal no session
+    setTimeout(() => {
+      if (mockSession && mockSession.user) {
+        callback('SIGNED_IN', mockSession);
+      } else {
+        callback('SIGNED_OUT', null);
+      }
+    }, 0);
     return {
       data: {
         subscription: {

@@ -28,14 +28,16 @@ import NotFound from './pages/NotFound';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, profile, loading } = useAuth();
+
+  // Always wait for auth to finish loading before making any redirect decisions
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg-dark)' }}>
       <div className="spinner spinner-lg" />
     </div>
   );
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user)    return <Navigate to="/login" replace />;
   if (!profile) return <ProfileRequired />;
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  if (allowedRoles && !allowedRoles.includes(profile.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
   return children;
@@ -93,8 +95,14 @@ const Unauthorized = () => (
   />
 );
 
+const LoadingScreen = () => (
+  <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg-dark)' }}>
+    <div className="spinner spinner-lg" />
+  </div>
+);
+
 const AppRoutes = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   const getDashboardPath = () => {
     if (!profile) return '/profile-required';
@@ -105,8 +113,18 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={user && !profile ? <ProfileRequired /> : user ? <Navigate to={getDashboardPath()} /> : <LoginPage />} />
-      <Route path="/register" element={user && !profile ? <ProfileRequired /> : user ? <Navigate to={getDashboardPath()} /> : <RegisterPage />} />
+      <Route path="/login" element={
+        loading ? <LoadingScreen /> :
+        user && !profile ? <ProfileRequired /> :
+        user ? <Navigate to={getDashboardPath()} /> :
+        <LoginPage />
+      } />
+      <Route path="/register" element={
+        loading ? <LoadingScreen /> :
+        user && !profile ? <ProfileRequired /> :
+        user ? <Navigate to={getDashboardPath()} /> :
+        <RegisterPage />
+      } />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/profile-required" element={<ProfileRequired />} />
       <Route path="/unauthorized" element={<Unauthorized />} />

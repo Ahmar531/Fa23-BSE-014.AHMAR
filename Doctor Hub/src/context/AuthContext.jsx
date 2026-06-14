@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase, isMocked } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -11,123 +11,181 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  const fetchProfile = async (userId) => {
+  // Track whether we are inside an explicit login/register call so we can
+  // skip the duplicate onAuthStateChange processing.
+  const skipNextAuthChange = useRef(false);
+
+  // ─── helpers ──────────────────────────────────────────────────────────────
+
+  const upsertProfile = async (authUser, overrides = {}) => {
+    const meta = authUser.user_metadata || {};
+    const payload = {
+      id:        authUser.id,
+      email:     authUser.email,
+      full_name: overrides.full_name || meta.full_name || authUser.email.split('@')[0],
+      role:      overrides.role      || meta.role      || 'patient',
+      phone:     overrides.phone     || meta.phone     || null,
+    };
+    // upsert so it works whether or not the row already exists
+    const { data, error } = await supabase
+      .from('users')
+      .upsert([payload], { onConflict: 'id' })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  };
+
+  const loadProfile = async (authUser) => {
+    setAuthError(null);
     try {
-      setAuthError(null);
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('id', authUser.id)
         .single();
-      if (error) throw error;
-      setProfile(data);
-      return data;
+
+      if (!error && data) {
+        setProfile(data);
+        return data;
+      }
+
+      // Row missing → auto-create from auth metadata
+      const created = await upsertProfile(authUser);
+      setProfile(created);
+      return created;
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      console.error('loadProfile error:', err);
       setProfile(null);
-      setAuthError('Your account exists, but its role profile is missing. Run the latest Supabase schema and make sure this user has a row in public.users.');
+      setAuthError('Could not load your profile. Please try logging in again.');
       return null;
     }
   };
 
+  // ─── Auth state listener (single source of truth) ─────────────────────────
   useEffect(() => {
-    const init = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
-        }
-      } catch (err) {
-        console.error('Error restoring session:', err);
-        setAuthError('Could not restore your session. Please sign in again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    init();
+    let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setLoading(true);
-      try {
+    // 1. restore existing session on mount
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        setUser(session.user);
+        await loadProfile(session.user);
+      }
+      setLoading(false);
+    }).catch((err) => {
+      console.error('getSession error:', err);
+      if (mounted) setLoading(false);
+    });
+
+    // 2. listen for future auth changes (sign-in from email link, sign-out, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+
+        // Skip if our own login() / register() is handling it
+        if (skipNextAuthChange.current) {
+          skipNextAuthChange.current = false;
+          return;
+        }
+
         if (session?.user) {
           setUser(session.user);
-          await fetchProfile(session.user.id);
+          setLoading(true);
+          await loadProfile(session.user);
+          setLoading(false);
         } else {
           setUser(null);
           setProfile(null);
           setAuthError(null);
         }
-      } finally {
-        setLoading(false);
       }
-    });
+    );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Auth actions ─────────────────────────────────────────────────────────
+
+  const login = async ({ email, password }) => {
+    skipNextAuthChange.current = true; // we handle state ourselves below
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { skipNextAuthChange.current = false; throw error; }
+      if (!data?.user) { skipNextAuthChange.current = false; throw new Error('Login failed: no user returned.'); }
+
+      const profileData = await loadProfile(data.user);
+      setUser(data.user); // ensure user state is set
+
+      toast.success('Welcome back! 👋');
+      return { ...data, profile: profileData };
+    } catch (err) {
+      skipNextAuthChange.current = false;
+      throw err;
+    }
+  };
 
   const register = async ({ email, password, fullName, role, phone }) => {
     const selectedRole = role || 'patient';
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: selectedRole,
-          phone: phone || null,
-        },
-      },
-    });
-    if (error) throw error;
 
-    const userId = data.user.id;
-
-    if (isMocked || data.session) {
-      const { error: profileError } = await supabase.from('users').insert([{
-        id: userId,
+    skipNextAuthChange.current = true;
+    try {
+      const { data, error } = await supabase.auth.signUp({
         email,
-        full_name: fullName,
-        role: selectedRole,
-        phone: phone || null,
-      }]);
-      if (profileError && profileError.code !== '23505') throw profileError;
+        password,
+        options: { data: { full_name: fullName, role: selectedRole, phone: phone || null } },
+      });
+      if (error) { skipNextAuthChange.current = false; throw error; }
+
+      // Always write the profile row immediately (even if email confirmation is required).
+      // This ensures the row exists when the user later confirms and logs in.
+      try {
+        await upsertProfile(data.user, { full_name: fullName, role: selectedRole, phone: phone || null });
+      } catch (profileErr) {
+        console.warn('Profile upsert on register failed (non-fatal):', profileErr.message);
+      }
+
+      if (isMocked) {
+        // mock mode: sign in straight away
+        const loginResult = await supabase.auth.signInWithPassword({ email, password });
+        if (loginResult.data?.user) {
+          setUser(loginResult.data.user);
+          const p = await loadProfile(loginResult.data.user);
+          toast.success('Account created! Welcome to DoctorHub 🎉');
+          return { ...loginResult.data, profile: p };
+        }
+      } else if (data.session) {
+        // Email confirmation OFF → user is already signed in
+        setUser(data.user);
+        const p = await loadProfile(data.user);
+        toast.success('Account created! Welcome to DoctorHub 🎉');
+        return { ...data, profile: p };
+      } else {
+        // Email confirmation required
+        skipNextAuthChange.current = false;
+        toast.success('Registration successful! Check your email to confirm your account.');
+        return data;
+      }
+    } catch (err) {
+      skipNextAuthChange.current = false;
+      throw err;
     }
-
-    if (isMocked) {
-      await login({ email, password });
-    } else {
-      toast.success('Registration successful! Please check your email.');
-    }
-    return data;
-  };
-
-  const login = async ({ email, password }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    if (!data?.user) throw new Error('Login failed: no user returned.');
-
-    setUser(data.user);
-    const profileData = await fetchProfile(data.user.id);
-    if (!profileData) {
-      await supabase.auth.signOut();
-      setUser(null);
-      throw new Error('Login successful, but your role profile is missing. Please run the latest Supabase schema or create this user in public.users.');
-    }
-
-    toast.success('Welcome back!');
-    return { ...data, profile: profileData };
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    setAuthError(null);
     toast.success('Logged out successfully');
   };
 
@@ -139,20 +197,21 @@ export const AuthProvider = ({ children }) => {
     toast.success('Password reset email sent!');
   };
 
+  // ─── Context value ─────────────────────────────────────────────────────────
   const value = {
     user,
     profile,
     loading,
-    register,
+    authError,
     login,
+    register,
     logout,
     forgotPassword,
-    fetchProfile,
-    authError,
-    isPatient: profile?.role === 'patient',
-    isDoctor: profile?.role === 'doctor',
-    isAssistant: profile?.role === 'assistant',
-    isAdmin: profile?.role === 'admin',
+    fetchProfile: loadProfile,
+    isPatient:    profile?.role === 'patient',
+    isDoctor:     profile?.role === 'doctor',
+    isAssistant:  profile?.role === 'assistant',
+    isAdmin:      profile?.role === 'admin',
     isSuperAdmin: profile?.role === 'super_admin',
   };
 
