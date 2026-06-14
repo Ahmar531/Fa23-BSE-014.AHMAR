@@ -27,21 +27,25 @@ export default function BookAppointment() {
       const { data, error } = await supabase.from('appointments').insert([{
         patient_id: user.id,
         doctor_id: doctorId,
-        doctor_name: doctor.full_name,
+        patient_name: user.full_name || user.email,
+        doctor_name: doctor.full_name || doctor.users?.full_name,
         appointment_date: form.date,
         appointment_time: form.time,
         notes: form.notes,
         status: 'pending',
         fee: doctor.fee || doctor.consultation_fee || 1500,
-      }]).select().single();
+      }]);
       if (error) throw error;
-      setAppointmentId(data.id);
+      // Handle both array response (mock) and single object (real supabase .select().single())
+      const inserted = Array.isArray(data) ? data[0] : data;
+      setAppointmentId(inserted?.id || 'local-' + Date.now());
       setStep(2);
       toast.success('Appointment booked! Upload payment screenshot.');
     } catch (err) {
       toast.error(err.message || 'Failed to book appointment');
     } finally { setLoading(false); }
   };
+
 
   const handlePayment = async () => {
     if (!form.paymentFile) { toast.error('Please upload payment screenshot'); return; }

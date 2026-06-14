@@ -3,111 +3,114 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Calendar, FileText, Building2, Users, Clock, CheckCircle, ArrowRight, TrendingUp } from 'lucide-react';
+import { Calendar, Users, CheckCircle, Clock, ArrowRight, FileText, Building2 } from 'lucide-react';
 
 export default function DoctorDashboard() {
   const { user, profile } = useAuth();
-  const [stats, setStats] = useState({ total: 0, today: 0, pending: 0, patients: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, confirmed: 0, completed: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
     const fetchData = async () => {
-      if (!user) return;
-      const today = new Date().toISOString().split('T')[0];
-      const { data: appts } = await supabase.from('appointments').select('*').eq('doctor_id', user.id).order('created_at', { ascending: false });
-      const all = appts || [];
-      const uniquePatients = new Set(all.map(a => a.patient_id)).size;
+      const { data } = await supabase.from('appointments').select('*').eq('doctor_id', user.id).order('created_at', { ascending: false });
+      const apts = data || [];
       setStats({
-        total: all.length,
-        today: all.filter(a => a.appointment_date === today).length,
-        pending: all.filter(a => a.status === 'pending').length,
-        patients: uniquePatients,
+        total: apts.length,
+        pending: apts.filter(a => a.status === 'pending').length,
+        confirmed: apts.filter(a => a.status === 'confirmed').length,
+        completed: apts.filter(a => a.status === 'completed').length,
       });
-      setRecent(all.slice(0, 5));
+      setRecent(apts.slice(0, 5));
       setLoading(false);
     };
     fetchData();
   }, [user]);
 
-  const statusBadge = (s) => {
-    const m = { pending: 'badge-warning', confirmed: 'badge-success', cancelled: 'badge-danger', completed: 'badge-primary' };
-    return <span className={`badge ${m[s] || 'badge-muted'}`}>{s}</span>;
-  };
-
   return (
     <DashboardLayout>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>Welcome, Dr. {profile?.full_name?.split(' ').slice(1).join(' ') || profile?.full_name} 🩺</h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Manage your appointments and patient care.</p>
+      {/* Welcome */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(139,92,246,0.4)' }}>
+            <span style={{ fontSize: 24 }}>🩺</span>
+          </div>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800 }}>Welcome, {profile?.full_name || 'Doctor'}!</h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Manage your patients and appointments</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 28 }}>
+        {[
+          { label: 'Total Patients', value: stats.total, color: '#8b5cf6' },
+          { label: 'Pending', value: stats.pending, color: '#f59e0b' },
+          { label: 'Confirmed', value: stats.confirmed, color: '#0ea5e9' },
+          { label: 'Completed', value: stats.completed, color: '#10b981' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="stat-card" style={{ '--gradient': `linear-gradient(90deg, ${color}, ${color}60)` }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+            <div style={{ fontSize: 34, fontWeight: 900, color, fontFamily: 'Plus Jakarta Sans' }}>{loading ? '—' : value}</div>
+          </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
         {[
-          { label: 'Appointments', path: '/doctor/appointments', icon: Calendar, color: '#0ea5e9' },
-          { label: 'Prescriptions', path: '/doctor/prescriptions', icon: FileText, color: '#8b5cf6' },
-          { label: 'My Clinics', path: '/doctor/clinics', icon: Building2, color: '#10b981' },
-        ].map(({ label, path, icon: Icon, color }) => (
+          { icon: Calendar, label: 'Appointments', desc: 'View & manage all bookings', path: '/doctor/appointments', color: '#0ea5e9' },
+          { icon: FileText, label: 'Prescriptions', desc: 'Add & view patient prescriptions', path: '/doctor/prescriptions', color: '#8b5cf6' },
+          { icon: Building2, label: 'My Clinics', desc: 'Manage clinic locations', path: '/doctor/clinics', color: '#10b981' },
+        ].map(({ icon: Icon, label, desc, path, color }) => (
           <Link key={path} to={path} style={{ textDecoration: 'none' }}>
-            <div className="card" style={{ cursor: 'pointer', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: 12 }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = color + '50'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
-            >
-              <div style={{ width: 42, height: 42, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon size={20} color={color} />
+            <div className="card" style={{ display: 'flex', gap: 14, cursor: 'pointer', transition: 'all 0.25s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = color + '40'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}>
+              <div style={{ width: 42, height: 42, borderRadius: 11, background: `${color}18`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon size={19} color={color} />
               </div>
-              <div style={{ fontWeight: 700 }}>{label}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{label}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>{desc}</div>
+              </div>
+              <ArrowRight size={16} color={color} style={{ marginTop: 2 }} />
             </div>
           </Link>
         ))}
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 16, marginBottom: 28 }}>
-        {[
-          { label: 'Total Appointments', value: stats.total, icon: Calendar, color: '#0ea5e9' },
-          { label: 'Today', value: stats.today, icon: Clock, color: '#f59e0b' },
-          { label: 'Pending Verify', value: stats.pending, icon: TrendingUp, color: '#ef4444' },
-          { label: 'Unique Patients', value: stats.patients, icon: Users, color: '#8b5cf6' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="stat-card" style={{ '--gradient': `linear-gradient(90deg, ${color}, ${color}80)` }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</div>
-              <Icon size={16} color={color} />
-            </div>
-            <div style={{ fontSize: 32, fontWeight: 800, color }}>{loading ? '—' : value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Recent */}
+      {/* Recent Appointments */}
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700 }}>Recent Appointments</h2>
-          <Link to="/doctor/appointments" className="btn btn-ghost btn-sm">View All <ArrowRight size={14} /></Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 700 }}>Today's Patients</h2>
+          <Link to="/doctor/appointments" className="btn btn-ghost btn-sm">All Appointments <ArrowRight size={13} /></Link>
         </div>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 44 }} />)}
+            {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 56 }} />)}
           </div>
         ) : recent.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>No appointments yet</div>
+          <div style={{ textAlign: 'center', padding: '36px 0' }}>
+            <Users size={40} color="var(--text-muted)" style={{ margin: '0 auto 12px', display: 'block' }} />
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>No appointments yet</p>
+          </div>
         ) : (
-          <div className="table-wrapper">
-            <table>
-              <thead><tr><th>Patient</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
-              <tbody>
-                {recent.map(a => (
-                  <tr key={a.id}>
-                    <td style={{ fontWeight: 500 }}>{a.patient_name || 'Patient'}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{a.appointment_date ? new Date(a.appointment_date).toLocaleDateString() : '—'}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{a.appointment_time || '—'}</td>
-                    <td>{statusBadge(a.status)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {recent.map(apt => (
+              <div key={apt.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: 'var(--bg-card2)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div className="avatar avatar-sm" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}>
+                  {(apt.patient_name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{apt.patient_name || 'Patient'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{apt.appointment_date} {apt.appointment_time && `• ${apt.appointment_time}`}</div>
+                </div>
+                <span className={`badge ${apt.status === 'confirmed' ? 'badge-primary' : apt.status === 'completed' ? 'badge-success' : apt.status === 'cancelled' ? 'badge-danger' : 'badge-warning'}`}>{apt.status}</span>
+              </div>
+            ))}
           </div>
         )}
       </div>

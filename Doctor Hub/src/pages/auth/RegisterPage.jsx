@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Stethoscope, Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { isMocked } from '../../lib/supabase';
 
 const roles = [
   { value: 'patient', label: '🧑‍⚕️ Patient', desc: 'Book appointments & manage history' },
@@ -10,8 +11,11 @@ const roles = [
   { value: 'assistant', label: '🧑‍💼 Assistant', desc: 'Verify payments & appointments' },
 ];
 
+const rolePaths = { patient: '/patient', doctor: '/doctor', assistant: '/assistant' };
+
 export default function RegisterPage() {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '', role: 'patient' });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,11 +23,17 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.fullName.trim()) { toast.error('Full name is required'); return; }
     if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setLoading(true);
     try {
       await register(form);
-      setDone(true);
+      if (isMocked) {
+        // Auto-navigated by AuthContext, but navigate as fallback
+        navigate(rolePaths[form.role] || '/patient');
+      } else {
+        setDone(true);
+      }
     } catch (err) {
       toast.error(err.message || 'Registration failed');
     } finally {

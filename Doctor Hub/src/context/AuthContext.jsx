@@ -59,8 +59,10 @@ export const AuthProvider = ({ children }) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
 
+    const userId = data.user.id;
+
     const { error: profileError } = await supabase.from('users').insert([{
-      id: data.user.id,
+      id: userId,
       email,
       full_name: fullName,
       role: role || 'patient',
@@ -68,7 +70,13 @@ export const AuthProvider = ({ children }) => {
     }]);
     if (profileError) throw profileError;
 
-    toast.success('Registration successful! Please check your email.');
+    // Auto-login if mocked to bypass email verification during preview/testing
+    const { isMocked } = await import('../lib/supabase');
+    if (isMocked) {
+      await login({ email, password });
+    } else {
+      toast.success('Registration successful! Please check your email.');
+    }
     return data;
   };
 
