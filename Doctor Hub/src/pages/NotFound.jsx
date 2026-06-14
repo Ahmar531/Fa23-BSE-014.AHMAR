@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Stethoscope, Home } from 'lucide-react';
+import { Home } from 'lucide-react';
 
 export default function NotFound() {
   return (

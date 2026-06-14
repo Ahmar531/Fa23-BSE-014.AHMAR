@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Users, Stethoscope, Calendar, CreditCard, ArrowRight, TrendingUp } from 'lucide-react';
+import { Users, Stethoscope, Calendar, CreditCard, ArrowRight } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ doctors: 0, patients: 0, appointments: 0, payments: 0 });

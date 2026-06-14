@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Activity, ShieldOff, Lock, FileText, AlertTriangle } from 'lucide-react';
+import { Activity, ShieldOff, Lock, FileText } from 'lucide-react';
 
 export default function MedicalHistory() {
   const { user } = useAuth();

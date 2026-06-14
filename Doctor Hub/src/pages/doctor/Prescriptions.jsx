@@ -6,7 +6,7 @@ import { FileText, Plus, Lock, X, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Prescriptions() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

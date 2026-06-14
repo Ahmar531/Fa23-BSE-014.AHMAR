@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -11,34 +11,66 @@ const timeSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '
 export default function BookAppointment() {
   const { doctorId } = useParams();
   const { state } = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const doctor = state?.doctor || {};
 
+  const [doctor, setDoctor] = useState(state?.doctor || null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ date: '', time: '', notes: '', paymentFile: null });
   const [loading, setLoading] = useState(false);
   const [appointmentId, setAppointmentId] = useState(null);
 
+  useEffect(() => {
+    if (state?.doctor) {
+      setDoctor(state.doctor);
+      return;
+    }
+
+    let active = true;
+    const fetchDoctor = async () => {
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('*, users(full_name, email)')
+        .eq('id', doctorId)
+        .single();
+
+      if (!active) return;
+      if (error || !data) {
+        toast.error('Doctor profile not found');
+        return;
+      }
+
+      setDoctor({ ...data, full_name: data.users?.full_name || data.full_name });
+    };
+
+    fetchDoctor();
+    return () => { active = false; };
+  }, [doctorId, state?.doctor]);
+
+  const consultationFee = Number(doctor?.fee || doctor?.consultation_fee || 1500);
+  const doctorUserId = doctor?.user_id || doctor?.auth_user_id || doctor?.id || doctorId;
+  const doctorName = doctor?.full_name || doctor?.users?.full_name || 'Doctor';
+
   const handleBooking = async () => {
     if (!form.date || !form.time) { toast.error('Please select date and time'); return; }
+    if (!doctor?.id) { toast.error('Doctor profile is still loading'); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.from('appointments').insert([{
         patient_id: user.id,
-        doctor_id: doctorId,
-        patient_name: user.full_name || user.email,
-        doctor_name: doctor.full_name || doctor.users?.full_name,
+        doctor_id: doctorUserId,
+        patient_name: profile?.full_name || user.user_metadata?.full_name || user.email,
+        doctor_name: doctorName,
         appointment_date: form.date,
         appointment_time: form.time,
         notes: form.notes,
         status: 'pending',
-        fee: doctor.fee || doctor.consultation_fee || 1500,
-      }]);
+        fee: consultationFee,
+      }]).select().single();
       if (error) throw error;
-      // Handle both array response (mock) and single object (real supabase .select().single())
       const inserted = Array.isArray(data) ? data[0] : data;
-      setAppointmentId(inserted?.id || 'local-' + Date.now());
+      if (!inserted?.id) throw new Error('Appointment was not created correctly.');
+      setAppointmentId(inserted.id);
       setStep(2);
       toast.success('Appointment booked! Upload payment screenshot.');
     } catch (err) {
@@ -52,29 +84,28 @@ export default function BookAppointment() {
     setLoading(true);
     try {
       const fileName = `payments/${appointmentId}_${Date.now()}.${form.paymentFile.name.split('.').pop()}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage.from('payment-screenshots').upload(fileName, form.paymentFile);
+      const { error: uploadError } = await supabase.storage.from('payment-screenshots').upload(fileName, form.paymentFile);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('payment-screenshots').getPublicUrl(fileName);
 
       await supabase.from('payments').insert([{
         appointment_id: appointmentId,
         patient_id: user.id,
-        doctor_id: doctorId,
-        amount: doctor.fee || 1500,
+        doctor_id: doctorUserId,
+        amount: consultationFee,
         screenshot_url: publicUrl,
         status: 'pending',
       }]);
       setStep(3);
       toast.success('Payment submitted! Awaiting verification.');
     } catch (err) {
-      // Even if upload fails show step 3
-      setStep(3);
-      toast.success('Appointment booked! Payment verification pending.');
+      toast.error(err.message || 'Payment submission failed');
     } finally { setLoading(false); }
   };
 
   const typeColors = { Allopathic: '#0ea5e9', Homeopathic: '#10b981', Herbal: '#f59e0b' };
-  const color = typeColors[doctor.treatment_type] || '#0ea5e9';
+  const color = typeColors[doctor?.treatment_type] || '#0ea5e9';
+  const initials = useMemo(() => doctorName.split(' ').map(n => n[0]).join('').slice(0, 2), [doctorName]);
 
   return (
     <DashboardLayout>
@@ -82,19 +113,19 @@ export default function BookAppointment() {
         {/* Doctor Card */}
         <div className="card" style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
           <div className="avatar avatar-lg" style={{ background: `linear-gradient(135deg, ${color}, ${color}80)` }}>
-            {(doctor.full_name || 'Dr').split(' ').map(n => n[0]).join('').slice(0, 2)}
+            {initials}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 18 }}>{doctor.full_name || 'Doctor'}</div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{doctor.specialization}</div>
+            <div style={{ fontWeight: 700, fontSize: 18 }}>{doctorName}</div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{doctor?.specialization}</div>
             <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {doctor.city || 'Pakistan'}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} fill="#fbbf24" color="#fbbf24" /> {doctor.rating || '4.8'}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {doctor?.city || 'Pakistan'}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} fill="#fbbf24" color="#fbbf24" /> {doctor?.rating || '4.8'}</span>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Consultation Fee</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color }}> Rs. {(doctor.fee || 1500).toLocaleString()}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color }}> Rs. {consultationFee.toLocaleString()}</div>
           </div>
         </div>
 
@@ -157,7 +188,7 @@ export default function BookAppointment() {
           <div className="card animate-fade">
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Upload Payment Screenshot</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24 }}>
-              Transfer <strong style={{ color: 'var(--primary)' }}>Rs. {(doctor.fee || 1500).toLocaleString()}</strong> and upload the screenshot below.
+              Transfer <strong style={{ color: 'var(--primary)' }}>Rs. {consultationFee.toLocaleString()}</strong> and upload the screenshot below.
             </p>
             <div className="alert alert-warning" style={{ marginBottom: 20 }}>
               <AlertCircle size={16} />
@@ -186,7 +217,7 @@ export default function BookAppointment() {
             </div>
             <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Booking Submitted!</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
-              Your appointment with <strong style={{ color: 'var(--text-primary)' }}>{doctor.full_name}</strong> on{' '}
+              Your appointment with <strong style={{ color: 'var(--text-primary)' }}>{doctorName}</strong> on{' '}
               <strong style={{ color: 'var(--text-primary)' }}>{form.date} at {form.time}</strong> has been booked.
             </p>
             <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 28 }}>

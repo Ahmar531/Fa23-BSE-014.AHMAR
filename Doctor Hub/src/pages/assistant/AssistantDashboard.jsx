@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { CreditCard, CheckCircle, Clock, ArrowRight, TrendingUp } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 
 export default function AssistantDashboard() {
-  const { profile } = useAuth();
   const [stats, setStats] = useState({ pending: 0, verified: 0, total: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);

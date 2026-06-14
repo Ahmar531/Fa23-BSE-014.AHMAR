@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Users, Search, Trash2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const roleColor = { patient: 'badge-primary', doctor: 'badge-accent', assistant: 'badge-success', admin: 'badge-warning', super_admin: 'badge-danger' };

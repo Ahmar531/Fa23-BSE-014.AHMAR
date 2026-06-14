@@ -59,7 +59,8 @@ const getDB = () => ({
   appointments: getLocalStorage('dh_appointments', []),
   payments: getLocalStorage('dh_payments', []),
   medical_history: getLocalStorage('dh_medical_history', []),
-  prescriptions: getLocalStorage('dh_prescriptions', [])
+  prescriptions: getLocalStorage('dh_prescriptions', []),
+  messages: getLocalStorage('dh_messages', [])
 });
 
 const saveDB = (db) => {
@@ -90,7 +91,7 @@ const mockAuth = {
       }
     };
   },
-  signUp: async ({ email, password }) => {
+  signUp: async ({ email }) => {
     const db = getDB();
     const existing = db.users.find(u => u.email === email);
     if (existing) return { data: null, error: new Error('User already exists') };
@@ -104,7 +105,7 @@ const mockAuth = {
     // We mock that the auth signup creates the user record
     return { data: { user: newUser }, error: null };
   },
-  signInWithPassword: async ({ email, password }) => {
+  signInWithPassword: async ({ email }) => {
     const db = getDB();
     const user = db.users.find(u => u.email === email);
     if (!user) return { data: null, error: new Error('User not found') };
@@ -125,7 +126,7 @@ const mockAuth = {
     window.dispatchEvent(event);
     return { error: null };
   },
-  resetPasswordForEmail: async (email) => {
+  resetPasswordForEmail: async () => {
     return { error: null };
   }
 };
@@ -137,10 +138,13 @@ class MockQueryBuilder {
     this.orderConfig = null;
     this.limitCount = null;
     this.singleRecord = false;
+    this.countMode = null;
+    this.action = 'SELECT';
+    this.actionData = null;
   }
 
-  select(fields) {
-    // fields is ignored in mock for simplicity
+  select(_fields, options = {}) {
+    this.countMode = options?.count || null;
     return this;
   }
 
@@ -165,6 +169,11 @@ class MockQueryBuilder {
   }
 
   single() {
+    this.singleRecord = true;
+    return this;
+  }
+
+  maybeSingle() {
     this.singleRecord = true;
     return this;
   }
@@ -224,11 +233,11 @@ class MockQueryBuilder {
       }
 
       if (this.singleRecord) {
-        if (list.length === 0) return { data: null, error: new Error('Record not found') };
+        if (list.length === 0) return { data: null, error: new Error('Record not found'), count: this.countMode ? 0 : null };
         return { data: list[0], error: null };
       }
 
-      return { data: list, error: null };
+      return { data: list, error: null, count: this.countMode ? list.length : null };
     }
 
     if (type === 'INSERT') {
@@ -237,7 +246,7 @@ class MockQueryBuilder {
 
       recordsToInsert.forEach(item => {
         const newItem = {
-          id: item.id || (this.table === 'users' ? data.id : (this.table.substring(0,3) + '-' + Math.random().toString(36).substring(2, 9))),
+          id: item.id || (this.table.substring(0,3) + '-' + Math.random().toString(36).substring(2, 9)),
           created_at: new Date().toISOString(),
           ...item
         };
@@ -306,28 +315,31 @@ class MockQueryBuilder {
 
   // Chainable actions trigger execution
   then(onfulfilled, onrejected) {
-    return this.executeQuery('SELECT').then(onfulfilled, onrejected);
+    return this.executeQuery(this.action, this.actionData).then(onfulfilled, onrejected);
   }
 
-  async insert(data) {
-    return this.executeQuery('INSERT', data);
+  insert(data) {
+    this.action = 'INSERT';
+    this.actionData = data;
+    return this;
   }
 
-  async update(data) {
-    return this.executeQuery('UPDATE', data);
+  update(data) {
+    this.action = 'UPDATE';
+    this.actionData = data;
+    return this;
   }
 
-  async delete() {
-    return this.executeQuery('DELETE');
+  delete() {
+    this.action = 'DELETE';
+    return this;
   }
 }
 
 // Storage Mock
 const mockStorage = {
-  from: (bucket) => ({
-    upload: async (path, file) => {
-      // Return local objectURL for preview
-      const localUrl = URL.createObjectURL(file);
+  from: () => ({
+    upload: async (path) => {
       return { data: { path }, error: null };
     },
     getPublicUrl: (path) => {

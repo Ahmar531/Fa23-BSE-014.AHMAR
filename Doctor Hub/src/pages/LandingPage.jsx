@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Stethoscope, Search, Calendar, Shield, Star, ArrowRight, CheckCircle, Heart, Activity, Users, Award } from 'lucide-react';
+import { Stethoscope, Search, Calendar, Shield, Star, ArrowRight, Heart, Activity, Users } from 'lucide-react';
 
 const features = [
   { icon: Search, title: 'Smart Doctor Search', desc: 'Filter by specialization, treatment type — Allopathic, Homeopathic, or Herbal.', color: '#0ea5e9' },

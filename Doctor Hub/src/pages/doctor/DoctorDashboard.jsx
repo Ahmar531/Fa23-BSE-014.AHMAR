@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Calendar, Users, CheckCircle, Clock, ArrowRight, FileText, Building2 } from 'lucide-react';
+import { Calendar, Users, ArrowRight, FileText, Building2 } from 'lucide-react';
 
 export default function DoctorDashboard() {
   const { user, profile } = useAuth();

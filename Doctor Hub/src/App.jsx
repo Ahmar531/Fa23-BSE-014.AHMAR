@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './index.css';
@@ -13,6 +13,7 @@ import SearchDoctors from './pages/patient/SearchDoctors';
 import BookAppointment from './pages/patient/BookAppointment';
 import MyAppointments from './pages/patient/MyAppointments';
 import MedicalHistory from './pages/patient/MedicalHistory';
+import Messages from './pages/shared/Messages';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import DoctorAppointments from './pages/doctor/DoctorAppointments';
 import Prescriptions from './pages/doctor/Prescriptions';
@@ -33,17 +34,70 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     </div>
   );
   if (!user) return <Navigate to="/login" replace />;
+  if (!profile) return <ProfileRequired />;
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
   return children;
 };
 
+const CenteredState = ({ title, message, action }) => (
+  <div style={{
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'var(--bg-dark)',
+    padding: 24,
+  }}>
+    <div className="card" style={{ maxWidth: 520, textAlign: 'center', padding: 34 }}>
+      <div style={{
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        background: 'rgba(14,165,233,0.12)',
+        border: '1px solid rgba(14,165,233,0.25)',
+        margin: '0 auto 18px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 800,
+        color: 'var(--primary-light)',
+        fontSize: 22,
+      }}>
+        !
+      </div>
+      <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 10 }}>{title}</h1>
+      <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 22 }}>{message}</p>
+      {action}
+    </div>
+  </div>
+);
+
+const ProfileRequired = () => {
+  const { logout, authError } = useAuth();
+  return (
+    <CenteredState
+      title="Profile Setup Needed"
+      message={authError || 'Your login is valid, but the app could not find your role profile. Please run the latest Supabase schema and make sure this user exists in public.users.'}
+      action={<button className="btn btn-primary" onClick={logout}>Sign out and try again</button>}
+    />
+  );
+};
+
+const Unauthorized = () => (
+  <CenteredState
+    title="Unauthorized"
+    message="Your account does not have permission to open this dashboard."
+    action={<Link className="btn btn-primary" to="/">Go Home</Link>}
+  />
+);
+
 const AppRoutes = () => {
   const { user, profile } = useAuth();
 
   const getDashboardPath = () => {
-    if (!profile) return '/login';
+    if (!profile) return '/profile-required';
     const map = { patient: '/patient', doctor: '/doctor', assistant: '/assistant', admin: '/admin', super_admin: '/superadmin' };
     return map[profile.role] || '/login';
   };
@@ -51,9 +105,11 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={user ? <Navigate to={getDashboardPath()} /> : <LoginPage />} />
-      <Route path="/register" element={user ? <Navigate to={getDashboardPath()} /> : <RegisterPage />} />
+      <Route path="/login" element={user && !profile ? <ProfileRequired /> : user ? <Navigate to={getDashboardPath()} /> : <LoginPage />} />
+      <Route path="/register" element={user && !profile ? <ProfileRequired /> : user ? <Navigate to={getDashboardPath()} /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/profile-required" element={<ProfileRequired />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Patient */}
       <Route path="/patient" element={<ProtectedRoute allowedRoles={['patient']}><PatientDashboard /></ProtectedRoute>} />
@@ -61,12 +117,14 @@ const AppRoutes = () => {
       <Route path="/patient/book/:doctorId" element={<ProtectedRoute allowedRoles={['patient']}><BookAppointment /></ProtectedRoute>} />
       <Route path="/patient/appointments" element={<ProtectedRoute allowedRoles={['patient']}><MyAppointments /></ProtectedRoute>} />
       <Route path="/patient/history" element={<ProtectedRoute allowedRoles={['patient']}><MedicalHistory /></ProtectedRoute>} />
+      <Route path="/patient/messages" element={<ProtectedRoute allowedRoles={['patient']}><Messages /></ProtectedRoute>} />
 
       {/* Doctor */}
       <Route path="/doctor" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard /></ProtectedRoute>} />
       <Route path="/doctor/appointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments /></ProtectedRoute>} />
       <Route path="/doctor/prescriptions" element={<ProtectedRoute allowedRoles={['doctor']}><Prescriptions /></ProtectedRoute>} />
       <Route path="/doctor/clinics" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorClinics /></ProtectedRoute>} />
+      <Route path="/doctor/messages" element={<ProtectedRoute allowedRoles={['doctor']}><Messages /></ProtectedRoute>} />
 
       {/* Assistant */}
       <Route path="/assistant" element={<ProtectedRoute allowedRoles={['assistant']}><AssistantDashboard /></ProtectedRoute>} />

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own profile" ON public.users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Authenticated users read profiles" ON public.users FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Admins read all users" ON public.users FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin','super_admin'))
@@ -24,6 +25,90 @@ CREATE POLICY "Admins update all users" ON public.users FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin','super_admin'))
 );
 CREATE POLICY "Insert own user" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Creates the public role profile even when Supabase email confirmation is enabled.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  requested_role TEXT;
+  resolved_role TEXT;
+BEGIN
+  requested_role := NEW.raw_user_meta_data ->> 'role';
+  resolved_role := CASE
+    WHEN requested_role IN ('patient','doctor','assistant','admin','super_admin') THEN requested_role
+    ELSE 'patient'
+  END;
+
+  INSERT INTO public.users (id, email, full_name, phone, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data ->> 'full_name',
+    NEW.raw_user_meta_data ->> 'phone',
+    resolved_role
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  IF resolved_role = 'patient' THEN
+    INSERT INTO public.patients (id) VALUES (NEW.id)
+    ON CONFLICT (id) DO NOTHING;
+  ELSIF resolved_role = 'doctor' THEN
+    IF NOT EXISTS (SELECT 1 FROM public.doctors WHERE user_id = NEW.id) THEN
+      INSERT INTO public.doctors (
+        user_id, specialization, treatment_type, city, consultation_fee,
+        experience_years, rating, bio, is_approved, is_available
+      )
+      VALUES (
+        NEW.id, 'General Physician', 'Allopathic', 'Pakistan', 1000,
+        0, 4.5, 'Doctor profile pending admin approval.', FALSE, TRUE
+      );
+    END IF;
+  ELSIF resolved_role = 'assistant' THEN
+    INSERT INTO public.assistants (id) VALUES (NEW.id)
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ============================
+-- 1A. PATIENTS
+-- ============================
+CREATE TABLE IF NOT EXISTS public.patients (
+  id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+  blood_group TEXT,
+  emergency_contact TEXT,
+  allergies TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Patients manage own details" ON public.patients FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+CREATE POLICY "Admins manage all patients" ON public.patients FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin','super_admin'))
+);
+
+-- ============================
+-- 1B. ASSISTANTS
+-- ============================
+CREATE TABLE IF NOT EXISTS public.assistants (
+  id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+  assigned_doctor_id UUID REFERENCES public.users(id),
+  shift_time TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.assistants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Assistants read own details" ON public.assistants FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Admins manage all assistants" ON public.assistants FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin','super_admin'))
+);
 
 -- ============================
 -- 2. DOCTORS
@@ -167,5 +252,45 @@ CREATE POLICY "Doctor reads own prescriptions" ON public.prescriptions FOR SELEC
 -- ============================
 -- 8. STORAGE BUCKET
 -- ============================
--- Run in Supabase Dashboard > Storage > New Bucket
--- Bucket name: payment-screenshots, Public: true
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('payment-screenshots', 'payment-screenshots', TRUE)
+ON CONFLICT (id) DO UPDATE SET public = TRUE;
+
+CREATE POLICY "Authenticated users upload payment screenshots" ON storage.objects
+FOR INSERT WITH CHECK (
+  bucket_id = 'payment-screenshots'
+  AND auth.role() = 'authenticated'
+);
+
+CREATE POLICY "Public reads payment screenshots" ON storage.objects
+FOR SELECT USING (bucket_id = 'payment-screenshots');
+
+-- ============================
+-- 9. MESSAGES
+-- ============================
+CREATE TABLE IF NOT EXISTS public.messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  receiver_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  appointment_id UUID REFERENCES public.appointments(id) ON DELETE SET NULL,
+  content TEXT NOT NULL,
+  read_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Participants read messages" ON public.messages FOR SELECT USING (
+  auth.uid() = sender_id OR auth.uid() = receiver_id
+);
+CREATE POLICY "Participants send messages" ON public.messages FOR INSERT WITH CHECK (
+  auth.uid() = sender_id
+  AND EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = receiver_id
+    AND role IN ('patient','doctor')
+  )
+);
+CREATE POLICY "Receiver marks messages read" ON public.messages FOR UPDATE USING (auth.uid() = receiver_id);
+
+CREATE INDEX IF NOT EXISTS messages_sender_receiver_idx ON public.messages(sender_id, receiver_id, created_at);
+CREATE INDEX IF NOT EXISTS messages_receiver_sender_idx ON public.messages(receiver_id, sender_id, created_at);

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { isMocked, supabase } from '../../lib/supabase';
 import DashboardLayout from '../../components/DashboardLayout';
-import { Search, Filter, MapPin, Star, Clock, Stethoscope, ChevronDown } from 'lucide-react';
+import { Search, MapPin, Star, Clock, Stethoscope } from 'lucide-react';
 
 const specializations = ['All', 'General Physician', 'Cardiologist', 'Dermatologist', 'Neurologist', 'Orthopedic', 'Pediatrician', 'ENT', 'Ophthalmologist', 'Gynecologist', 'Psychiatrist'];
 const treatmentTypes = ['All', 'Allopathic', 'Homeopathic', 'Herbal'];
@@ -31,9 +31,20 @@ export default function SearchDoctors() {
       setLoading(true);
       try {
         const { data, error } = await supabase.from('doctors').select(`*, users(full_name, email)`);
-        if (error || !data?.length) setDoctors(mockDoctors);
-        else setDoctors(data.map(d => ({ ...d, full_name: d.users?.full_name || d.full_name })));
-      } catch { setDoctors(mockDoctors); }
+        if (error) {
+          setDoctors(isMocked ? mockDoctors : []);
+        } else if (!data?.length) {
+          setDoctors(isMocked ? mockDoctors : []);
+        } else {
+          setDoctors(data.map(d => ({
+            ...d,
+            full_name: d.users?.full_name || d.full_name,
+            fee: d.consultation_fee || d.fee,
+            experience: d.experience_years || d.experience,
+            available: d.is_available ?? d.available,
+          })));
+        }
+      } catch { setDoctors(isMocked ? mockDoctors : []); }
       finally { setLoading(false); }
     };
     fetchDoctors();

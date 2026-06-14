@@ -395,6 +395,18 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 /* Page content padding */
 .page-content{padding:26px 30px;}
 
+/* Messages */
+.messages-layout{
+  display:grid;
+  grid-template-columns:minmax(260px,320px) minmax(0,1fr);
+  gap:18px;
+  align-items:stretch;
+}
+
+@media(max-width:768px){
+  .messages-layout{grid-template-columns:1fr;}
+}
+
 /* Glow card variant */
 .card-glow{
   background:var(--bg-card);

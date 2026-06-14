@@ -2,8 +2,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Calendar, FileText, CreditCard,
-  Building2, Search, History, LogOut, Menu, X, Bell, ChevronDown,
-  Stethoscope, Shield, UserCheck, Settings
+  Building2, Search, History, LogOut, Menu, Bell, ChevronDown,
+  Stethoscope, Shield, MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -13,12 +13,14 @@ const navConfig = {
     { label: 'Find Doctors', path: '/patient/search', icon: Search },
     { label: 'My Appointments', path: '/patient/appointments', icon: Calendar },
     { label: 'Medical History', path: '/patient/history', icon: History },
+    { label: 'Messages', path: '/patient/messages', icon: MessageSquare },
   ],
   doctor: [
     { label: 'Dashboard', path: '/doctor', icon: LayoutDashboard },
     { label: 'Appointments', path: '/doctor/appointments', icon: Calendar },
     { label: 'Prescriptions', path: '/doctor/prescriptions', icon: FileText },
     { label: 'My Clinics', path: '/doctor/clinics', icon: Building2 },
+    { label: 'Messages', path: '/doctor/messages', icon: MessageSquare },
   ],
   assistant: [
     { label: 'Dashboard', path: '/assistant', icon: LayoutDashboard },

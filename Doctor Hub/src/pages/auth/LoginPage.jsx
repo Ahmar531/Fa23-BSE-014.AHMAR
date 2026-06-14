@@ -4,6 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { Stethoscope, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const rolePaths = {
+  patient: '/patient',
+  doctor: '/doctor',
+  assistant: '/assistant',
+  admin: '/admin',
+  super_admin: '/superadmin',
+};
+
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -15,8 +23,8 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { user } = await login(form);
-      // Profile fetch happens in context; redirect based on role happens in App.jsx
+      const { profile } = await login(form);
+      navigate(rolePaths[profile?.role] || '/patient', { replace: true });
     } catch (err) {
       toast.error(err.message || 'Login failed');
     } finally {

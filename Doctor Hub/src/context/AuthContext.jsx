@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase, isMocked } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
@@ -14,9 +14,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
 
   const fetchProfile = async (userId) => {
     try {
+      setAuthError(null);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -27,28 +29,42 @@ export const AuthProvider = ({ children }) => {
       return data;
     } catch (err) {
       console.error('Error fetching profile:', err);
+      setProfile(null);
+      setAuthError('Your account exists, but its role profile is missing. Run the latest Supabase schema and make sure this user has a row in public.users.');
       return null;
     }
   };
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        }
+      } catch (err) {
+        console.error('Error restoring session:', err);
+        setAuthError('Could not restore your session. Please sign in again.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
+      setLoading(true);
+      try {
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        } else {
+          setUser(null);
+          setProfile(null);
+          setAuthError(null);
+        }
+      } finally {
+        setLoading(false);
       }
     });
 
@@ -56,22 +72,33 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = async ({ email, password, fullName, role, phone }) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const selectedRole = role || 'patient';
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: selectedRole,
+          phone: phone || null,
+        },
+      },
+    });
     if (error) throw error;
 
     const userId = data.user.id;
 
-    const { error: profileError } = await supabase.from('users').insert([{
-      id: userId,
-      email,
-      full_name: fullName,
-      role: role || 'patient',
-      phone: phone || null,
-    }]);
-    if (profileError) throw profileError;
+    if (isMocked || data.session) {
+      const { error: profileError } = await supabase.from('users').insert([{
+        id: userId,
+        email,
+        full_name: fullName,
+        role: selectedRole,
+        phone: phone || null,
+      }]);
+      if (profileError && profileError.code !== '23505') throw profileError;
+    }
 
-    // Auto-login if mocked to bypass email verification during preview/testing
-    const { isMocked } = await import('../lib/supabase');
     if (isMocked) {
       await login({ email, password });
     } else {
@@ -83,9 +110,18 @@ export const AuthProvider = ({ children }) => {
   const login = async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    await fetchProfile(data.user.id);
+    if (!data?.user) throw new Error('Login failed: no user returned.');
+
+    setUser(data.user);
+    const profileData = await fetchProfile(data.user.id);
+    if (!profileData) {
+      await supabase.auth.signOut();
+      setUser(null);
+      throw new Error('Login successful, but your role profile is missing. Please run the latest Supabase schema or create this user in public.users.');
+    }
+
     toast.success('Welcome back!');
-    return data;
+    return { ...data, profile: profileData };
   };
 
   const logout = async () => {
@@ -112,6 +148,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     fetchProfile,
+    authError,
     isPatient: profile?.role === 'patient',
     isDoctor: profile?.role === 'doctor',
     isAssistant: profile?.role === 'assistant',

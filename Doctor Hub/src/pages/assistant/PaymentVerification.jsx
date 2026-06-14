@@ -32,8 +32,6 @@ export default function PaymentVerification() {
     fetchPayments();
   };
 
-  const filtered = payments;
-
   return (
     <DashboardLayout>
       <div style={{ marginBottom: 24 }}>
