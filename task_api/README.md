@@ -2,6 +2,11 @@
 
 A small in-memory CRUD API built with Python and FastAPI for the BE-01 Week 2 assignment.
 
+## Scrennshot
+
+<img width="926" height="515" alt="Screenshot 2026-09-15 010432" src="https://github.com/user-attachments/assets/77c95d7f-23ae-474d-908c-32c9fe1a77d7" />
+
+
 ## Run locally
 
 ```powershell
