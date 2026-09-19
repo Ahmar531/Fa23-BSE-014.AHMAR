@@ -1,20 +1,24 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
 
-from main import Task, app, tasks
+from database import SessionLocal
+from main import TaskRecord, app
 
 
 client = TestClient(app)
 
 
 def reset_tasks() -> None:
-    tasks.clear()
-    tasks.extend(
-        [
-            Task(id=1, title="Read the assignment", done=True),
-            Task(id=2, title="Build the API", done=False),
-            Task(id=3, title="Test the endpoints", done=False),
-        ]
-    )
+    with SessionLocal() as db:
+        db.execute(delete(TaskRecord))
+        db.add_all(
+            [
+                TaskRecord(title="Read the assignment", done=True),
+                TaskRecord(title="Build the API", done=False),
+                TaskRecord(title="Test the endpoints", done=False),
+            ]
+        )
+        db.commit()
 
 
 def setup_function() -> None:

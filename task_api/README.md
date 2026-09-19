@@ -1,6 +1,6 @@
 # Task API
 
-A small in-memory CRUD API built with Python and FastAPI for the BE-01 Week 2 assignment.
+A small PostgreSQL-backed CRUD API built with Python and FastAPI for the BE-01 Week 2 assignment.
 
 ## Scrennshot
 
@@ -18,7 +18,19 @@ py -m uvicorn main:app --reload
 
 Open Swagger UI at <http://localhost:8000/docs>.
 
-The data is stored only in memory, so it resets to the three example tasks whenever the server restarts.
+## PostgreSQL setup
+
+1. Create a PostgreSQL database, for example `task_api`.
+2. Set `DATABASE_URL` before starting the API. In PowerShell:
+
+```powershell
+$env:DATABASE_URL = "postgresql+psycopg://postgres:YOUR_PASSWORD@localhost:5432/task_api"
+py -m uvicorn main:app --reload
+```
+
+Replace the username, password, host, port, and database name with your values. Do not commit your real password. The API creates the `tasks` table automatically when it starts.
+
+If `DATABASE_URL` is not set, the project uses local SQLite at `tasks.db`, which is useful for running the tests without PostgreSQL.
 
 ## Endpoints
 
